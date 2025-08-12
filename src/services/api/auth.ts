@@ -12,38 +12,39 @@ import { api } from './base';
 export const authApi = {
   // Login
   login: async (credentials: LoginCredentials): Promise<AuthResponse> =>
-    api.post('/api/auth/login', credentials),
+    api.post('/supplier/login', credentials),
 
   // Register
   register: async (data: RegisterData): Promise<AuthResponse> =>
-    api.post('/api/auth/register', data),
+    api.post('/supplier/register', data),
 
   // Logout
-  logout: async (): Promise<void> => api.post('/api/auth/logout'),
+  logout: async (): Promise<void> => api.post('/supplier/logout'),
 
   // Get current user
-  getCurrentUser: async (): Promise<AuthUser> => api.get('/api/auth/me'),
+  getCurrentUser: async (): Promise<AuthUser> => api.get('/supplier/me'),
 
-  // Refresh token
-  refreshToken: async (refreshToken: string): Promise<AuthResponse> =>
-    api.post('/api/auth/refresh', { refreshToken }),
+  // Refresh token - TODO: Re-enable when API returns separate access_token and refresh_token
+  // Currently API returns single 'token' field, but will change to separate tokens later
+  // refreshToken: async (refreshToken: string): Promise<AuthResponse> =>
+  //   api.post('/supplier/refresh', { refreshToken }),
 
   // Forgot password
   forgotPassword: async (data: ForgotPasswordData): Promise<void> =>
-    api.post('/api/auth/forgot-password', data),
+    api.post('/supplier/forgot-password', data),
 
   // Reset password
   resetPassword: async (data: ResetPasswordData): Promise<void> =>
-    api.post('/api/auth/reset-password', data),
+    api.post('/supplier/reset-password', data),
 
   // Change password
   changePassword: async (data: ChangePasswordData): Promise<void> =>
-    api.post('/api/auth/change-password', data),
+    api.post('/supplier/change-password', data),
 
   // Verify email
   verifyEmail: async (token: string): Promise<void> =>
-    api.post('/api/auth/verify-email', { token }),
+    api.post('/supplier/verify-email', { token }),
 
   // Resend verification email
-  resendVerificationEmail: async (): Promise<void> => api.post('/api/auth/resend-verification'),
+  resendVerificationEmail: async (): Promise<void> => api.post('/supplier/resend-verification'),
 };

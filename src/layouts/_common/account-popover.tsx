@@ -11,41 +11,27 @@ import Typography from '@mui/material/Typography';
 // routes
 import { useRouter } from 'src/routes/hooks';
 // hooks
-import { useMockedUser } from 'src/hooks/use-mocked-user';
-// auth
+import { useCurrentUser } from 'src/hooks/api/use-auth';
 // components
 import { varHover } from 'src/components/animate';
 import CustomPopover, { usePopover } from 'src/components/custom-popover';
+import LogoutButton from 'src/components/logout-button';
 
 // ----------------------------------------------------------------------
 
 const OPTIONS = [
-
   {
     label: 'Profile',
     linkTo: '/',
   },
-
 ];
 
 // ----------------------------------------------------------------------
 
 export default function AccountPopover() {
   const router = useRouter();
-
-  const { user } = useMockedUser();
-
-
+  const { data: user } = useCurrentUser();
   const popover = usePopover();
-
-  const handleLogout = async () => {
-    try {
-      popover.onClose();
-      router.replace('/');
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handleClickItem = (path: string) => {
     popover.onClose();
@@ -71,26 +57,25 @@ export default function AccountPopover() {
         }}
       >
         <Avatar
-          src={user?.photoURL}
-          alt={user?.displayName}
+          alt={user?.email}
           sx={{
             width: 36,
             height: 36,
             border: (theme) => `solid 2px ${theme.palette.background.default}`,
           }}
         >
-          {user?.displayName.charAt(0).toUpperCase()}
+          {user?.email?.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
 
       <CustomPopover open={popover.open} onClose={popover.onClose} sx={{ width: 200, p: 0 }}>
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {user?.displayName}
+            {user?.email}
           </Typography>
 
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {user?.email}
+            Supplier Account
           </Typography>
         </Box>
 
@@ -106,12 +91,11 @@ export default function AccountPopover() {
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
-        <MenuItem
-          onClick={handleLogout}
-          sx={{ m: 1, fontWeight: 'fontWeightBold', color: 'error.main' }}
-        >
-          Logout
-        </MenuItem>
+        <Box sx={{ p: 1 }}>
+          <LogoutButton variant="menuItem" onClick={popover.onClose}>
+            Logout
+          </LogoutButton>
+        </Box>
       </CustomPopover>
     </>
   );

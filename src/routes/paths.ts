@@ -12,6 +12,7 @@ export const paths = {
   auth: { 
     root: ROOTS.AUTH,
     login: `${ROOTS.AUTH}/login`,
+    resetPassword: `${ROOTS.AUTH}/reset-password`,
   },
   // DASHBOARD
   dashboard: {

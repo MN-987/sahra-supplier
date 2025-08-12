@@ -1,10 +1,11 @@
 export interface AuthUser {
   id: string;
-  email: string;
   name: string;
-  avatar?: string;
-  role: 'admin' | 'manager' | 'user';
-  permissions: string[];
+  description?: string;
+  address?: string;
+  email: string;
+  phone_number?: string;
+  need_to_reset: boolean;
 }
 
 export interface LoginCredentials {
@@ -20,9 +21,14 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  user: AuthUser;
-  accessToken: string;
-  refreshToken: string;
+  status: boolean;
+  message: string;
+  data: {
+    token: string;
+    user: AuthUser;
+  //    accessToken: string;
+  // refreshToken: string;
+  };
 }
 
 export interface ForgotPasswordData {
@@ -30,9 +36,9 @@ export interface ForgotPasswordData {
 }
 
 export interface ResetPasswordData {
-  token: string;
+  current_password: string;
   password: string;
-  confirmPassword: string;
+  password_confirmation: string;
 }
 
 export interface ChangePasswordData {

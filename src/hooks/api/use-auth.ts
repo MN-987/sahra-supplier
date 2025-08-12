@@ -17,14 +17,18 @@ export const authKeys = {
 };
 
 // Queries
-export const useCurrentUser = () =>
-  useQuery({
+export const useCurrentUser = () => {
+  const hasToken = !!localStorage.getItem('accessToken');
+  
+  return useQuery({
     queryKey: authKeys.user(),
     queryFn: () => authApi.getCurrentUser(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 10 * 60 * 1000, 
+    gcTime: 15 * 60 * 1000,
     retry: false, // Don't retry on auth failures
+    enabled: hasToken, // Only run query if there's a token
   });
+};
 
 // Mutations
 export const useLogin = () => {
@@ -33,14 +37,17 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (response) => {
-      // Store tokens
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // Store token from the API response
+      localStorage.setItem('accessToken', response.data.token);
+      
+      // TODO: When API changes to return separate tokens, update to:
+      // localStorage.setItem('accessToken', response.data.access_token);
+      // localStorage.setItem('refreshToken', response.data.refresh_token);
 
       // Set user data in cache
-      queryClient.setQueryData(authKeys.user(), response.user);
+      queryClient.setQueryData(authKeys.user(), response.data.user);
 
-      toast.success('Login successful');
+      // Don't show toast here to avoid timing issues - let the component handle success feedback
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Login failed');
@@ -54,12 +61,15 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: (data: RegisterData) => authApi.register(data),
     onSuccess: (response) => {
-      // Store tokens
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // Store token from the API response
+      localStorage.setItem('accessToken', response.data.token);
+      
+      // TODO: When API changes to return separate tokens, update to:
+      // localStorage.setItem('accessToken', response.data.access_token);
+      // localStorage.setItem('refreshToken', response.data.refresh_token);
 
       // Set user data in cache
-      queryClient.setQueryData(authKeys.user(), response.user);
+      queryClient.setQueryData(authKeys.user(), response.data.user);
 
       toast.success('Registration successful');
     },
@@ -75,22 +85,27 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
-      // Clear tokens
+      // Clear token
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      
+      // TODO: When API changes to return separate tokens, also clear:
+      // localStorage.removeItem('refreshToken');
 
       // Clear all queries
       queryClient.clear();
 
-      toast.success('Logout successful');
+      // Don't show toast here to avoid timing issues - let the component handle success feedback
     },
     onError: (error: Error) => {
       // Even if logout fails on server, clear local data
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // TODO: When API changes to return separate tokens, also clear:
+      // localStorage.removeItem('refreshToken');
+      
       queryClient.clear();
 
-      toast.error(error.message || 'Logout failed');
+      // Don't show error toast - let the component handle it
+      console.error('Logout error:', error);
     },
   });
 };

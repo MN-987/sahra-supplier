@@ -1,12 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
+// auth
+import AuthGuard from 'src/auth/auth-guard';
 // layouts
 import DashboardLayout from 'src/layouts/dashboard';
 // components
 import { LoadingScreen } from 'src/components/loading-screen';
 import Calender from 'src/pages/dashboard/Calender';
-import AuthModernLayout from 'src/layouts/auth/modern';
-import LoginPage from 'src/pages/auth/login';
 
 // ----------------------------------------------------------------------
 
@@ -17,18 +17,20 @@ const Vendor = lazy(() => import('src/pages/dashboard/Vendor'));
 const Booking = lazy(() => import('src/pages/dashboard/Booking'));
 const Events = lazy(() => import('src/pages/dashboard/events'));
 const UserProfile = lazy(() => import('src/sections/users/user-profile'));
+
 // ----------------------------------------------------------------------
 
 export const dashboardRoutes = [
   {
-    
     path: 'dashboard',
     element: (
-      <DashboardLayout>
-        <Suspense fallback={<LoadingScreen />}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <AuthGuard>
+        <DashboardLayout>
+          <Suspense fallback={<LoadingScreen />}>
+            <Outlet />
+          </Suspense>
+        </DashboardLayout>
+      </AuthGuard>
     ),
     children: [
       { element: <Home />, index: true },
