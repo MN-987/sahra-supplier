@@ -27,6 +27,8 @@ export const paths = {
       vendor: `${ROOTS.DASHBOARD}/management/vendor`,
       events: `${ROOTS.DASHBOARD}/management/events`,
       calender: `${ROOTS.DASHBOARD}/management/calender`,
+      services: `${ROOTS.DASHBOARD}/management/services`,
+      create: `${ROOTS.DASHBOARD}/management/services/create`,
     },
   },
 };
