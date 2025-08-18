@@ -35,6 +35,7 @@ const ICONS = {
   dashboard: icon('solar:home-bold'),
   vendor: icon('solar:users-group-rounded-bold'),
   event: icon('solar:calendar-mark-bold'),
+  services: icon('solar:settings-bold'),
 };
 
 // ----------------------------------------------------------------------
@@ -68,7 +69,16 @@ export function useNavData() {
             icon: ICONS.user,
             children: [
               { title: 'List', path: paths.dashboard.management.user },
-
+              { title: 'Profile', path: paths.dashboard.management.profile },
+            ],
+          },
+           {
+            title: 'Services',
+            path: paths.dashboard.management.services,
+            icon: ICONS.services,
+            children: [
+              { title: 'List', path: paths.dashboard.management.services },
+              { title: 'Create', path: paths.dashboard.management.create },
             ],
           },
           {
@@ -94,6 +104,7 @@ export function useNavData() {
             path: paths.dashboard.management.calender,
             icon: ICONS.calendar,
           },
+       
         ],
       },
     ],

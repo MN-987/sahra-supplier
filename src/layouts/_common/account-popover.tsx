@@ -16,13 +16,15 @@ import { useCurrentUser } from 'src/hooks/api/use-auth';
 import { varHover } from 'src/components/animate';
 import CustomPopover, { usePopover } from 'src/components/custom-popover';
 import LogoutButton from 'src/components/logout-button';
+import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 const OPTIONS = [
   {
     label: 'Profile',
-    linkTo: '/',
+    icon: 'solar:user-bold-duotone',
+    linkTo: '/dashboard/management/user/profile',
   },
 ];
 
@@ -83,7 +85,21 @@ export default function AccountPopover() {
 
         <Stack sx={{ p: 1 }}>
           {OPTIONS.map((option) => (
-            <MenuItem key={option.label} onClick={() => handleClickItem(option.linkTo)}>
+            <MenuItem
+              key={option.label}
+              onClick={() => handleClickItem(option.linkTo)}
+              sx={{
+                px: 2,
+                py: 1,
+                borderRadius: 1,
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Box sx={{ mr: 2, display: 'flex' }}>
+                <Iconify icon={option.icon} width={20} />
+              </Box>
               {option.label}
             </MenuItem>
           ))}
