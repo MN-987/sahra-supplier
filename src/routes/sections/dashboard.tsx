@@ -16,6 +16,7 @@ const User = lazy(() => import('src/pages/dashboard/User'));
 const Vendor = lazy(() => import('src/pages/dashboard/Vendor'));
 const Booking = lazy(() => import('src/pages/dashboard/Booking'));
 const Events = lazy(() => import('src/pages/dashboard/events'));
+const CreateEvent = lazy(() => import('src/pages/dashboard/CreateEvent'));
 const Profile = lazy(() => import('src/pages/dashboard/Profile'));
 const Services = lazy(() => import('src/pages/dashboard/Services'));
 const CreateService = lazy(() => import('src/pages/dashboard/CreateService'));
@@ -56,7 +57,13 @@ export const dashboardRoutes = [
             ],
           },
           { path: 'vendor', element: <Vendor /> },
-          { path: 'events', element: <Events /> },
+          {
+            path: 'events',
+            children: [
+              { element: <Events />, index: true },
+              { path: 'create', element: <CreateEvent /> },
+            ],
+          },
           { path: 'calender', element: <Calender /> },
         ],
       },

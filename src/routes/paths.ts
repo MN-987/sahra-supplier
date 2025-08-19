@@ -29,6 +29,7 @@ export const paths = {
       calender: `${ROOTS.DASHBOARD}/management/calender`,
       services: `${ROOTS.DASHBOARD}/management/services`,
       create: `${ROOTS.DASHBOARD}/management/services/create`,
+      createEvent: `${ROOTS.DASHBOARD}/management/events/create`,
     },
   },
 };
