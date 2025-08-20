@@ -17,27 +17,23 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-} from '@mui/material'; 
-import { 
-  Edit as EditIcon, 
+} from '@mui/material';
+import {
+  Edit as EditIcon,
   MoreVert as MoreVertIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  Block as BlockIcon,
-  Person as PersonIcon,
-  AccountCircle,
 } from '@mui/icons-material';
-import { TableColumn } from '../../types/table-column'; 
+import { TableColumn } from '../../types/table-column';
 import { TableContentProps } from '../../types/table-content-props';
 
 // Helper Components
-const SortableHeader = ({ 
-  column, 
-  sortConfig, 
-  onSort 
-}: { 
-  column: TableColumn<any>; 
-  sortConfig: { key: string; direction: 'asc' | 'desc' } | null; 
+const SortableHeader = ({
+  column,
+  sortConfig,
+  onSort,
+}: {
+  column: TableColumn<any>;
+  sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   onSort: (key: string) => void;
 }) => {
   const getSortIcon = (columnKey: string) => {
@@ -46,17 +42,19 @@ const SortableHeader = ({
   };
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
+    <Box
+      sx={{
+        display: 'flex',
         alignItems: 'center',
         cursor: column.sortable ? 'pointer' : 'default',
         userSelect: 'none',
         padding: '16px',
-        '&:hover': column.sortable ? {
-          bgcolor: 'action.hover'
-        } : undefined,
-        transition: 'background-color 0.2s'
+        '&:hover': column.sortable
+          ? {
+              bgcolor: 'action.hover',
+            }
+          : undefined,
+        transition: 'background-color 0.2s',
       }}
       onClick={(e) => {
         e.preventDefault();
@@ -68,13 +66,13 @@ const SortableHeader = ({
     >
       {column.label}
       {column.sortable && (
-        <Typography 
-          component="span" 
-          sx={{ 
+        <Typography
+          component="span"
+          sx={{
             ml: 1,
             opacity: sortConfig?.key === column.key ? 1 : 0.5,
             transition: 'opacity 0.2s',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
           }}
         >
           {getSortIcon(column.key) || '↕'}
@@ -84,19 +82,13 @@ const SortableHeader = ({
   );
 };
 
-const CellContent = ({ 
-  column, 
-  row 
-}: { 
-  column: TableColumn<any>; 
-  row: any;
-}) => {
+const CellContent = ({ column, row }: { column: TableColumn<any>; row: any }) => {
   const value = row[column.key];
-  
+
   if (column.render) {
     return column.render(value, row);
   }
-  
+
   if (column.key.includes('status') && typeof value === 'string') {
     const getStatusColor = (status: string): 'success' | 'warning' | 'error' | 'default' => {
       switch (status?.toLowerCase()) {
@@ -113,43 +105,34 @@ const CellContent = ({
     };
 
     return (
-      <Chip
-        label={value}
-        color={getStatusColor(value)}
-        size="small"
-        sx={{ fontWeight: 500 }}
-      />
+      <Chip label={value} color={getStatusColor(value)} size="small" sx={{ fontWeight: 500 }} />
     );
   }
-  
+
   if (column.key.includes('avatar') || column.key.includes('image')) {
-    return (
-      <Avatar sx={{ width: 40, height: 40, bgcolor: 'transparent' }}>
-        {value}
-      </Avatar>
-    );
+    return <Avatar sx={{ width: 40, height: 40, bgcolor: 'transparent' }}>{value}</Avatar>;
   }
-  
+
   return value;
 };
 
-const ActionMenu = ({ 
-  anchorEl, 
-  onClose, 
-  onEdit, 
-  // onDelete 
-}: { 
-  anchorEl: HTMLElement | null; 
-  onClose: () => void; 
-  onEdit: () => void; 
-  // onDelete: () => void;
+const ActionMenu = ({
+  anchorEl,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  anchorEl: HTMLElement | null;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) => (
   <Menu
     anchorEl={anchorEl}
     open={Boolean(anchorEl)}
     onClose={onClose}
     PaperProps={{
-      sx: { width: 150, maxWidth: '100%' }
+      sx: { width: 150, maxWidth: '100%' },
     }}
     anchorOrigin={{
       vertical: 'top',
@@ -161,21 +144,23 @@ const ActionMenu = ({
     }}
     sx={{
       mb: 0.5,
-      ml: 0.5
+      ml: 0.5,
     }}
-  >  {/* action menu */}
+  >
+    {' '}
+    {/* action menu */}
     <MenuItem onClick={onEdit}>
       <ListItemIcon>
-        <AccountCircle fontSize="small" />
+        <EditIcon fontSize="small" />
       </ListItemIcon>
-      <ListItemText>View Profile</ListItemText>
+      <ListItemText>Edit</ListItemText>
     </MenuItem>
-    {/* <MenuItem onClick={onDelete} sx={{ color: 'error.main' }}>
+    <MenuItem onClick={onDelete} sx={{ color: 'error.main' }}>
       <ListItemIcon>
         <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
       </ListItemIcon>
-      <ListItemText>Delete User</ListItemText>
-    </MenuItem> */}
+      <ListItemText>Delete</ListItemText>
+    </MenuItem>
   </Menu>
 );
 
@@ -196,8 +181,8 @@ export const TableContent = <T extends Record<string, any>>({
   const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>, row: T) => {
-    setAnchorEl(event.currentTarget); //set the anchor element to the current target
-    setSelectedRow(row); //set the selected row to the row
+    setAnchorEl(event.currentTarget); // set the anchor element to the current target
+    setSelectedRow(row); // set the selected row to the row
   };
 
   const handleClose = () => {
@@ -205,7 +190,8 @@ export const TableContent = <T extends Record<string, any>>({
     setSelectedRow(null);
   };
 
-  const handleEdit = () => { //handle the edit action
+  const handleEdit = () => {
+    // handle the edit action
     if (selectedRow && onRowEdit) {
       onRowEdit(selectedRow);
     }
@@ -219,8 +205,8 @@ export const TableContent = <T extends Record<string, any>>({
     handleClose();
   };
 
-  const isAllSelected = data.length > 0 && data.every(row => selectedRowIds.has(row[rowIdField]));
-  const isIndeterminate = data.some(row => selectedRowIds.has(row[rowIdField])) && !isAllSelected;
+  const isAllSelected = data.length > 0 && data.every((row) => selectedRowIds.has(row[rowIdField]));
+  const isIndeterminate = data.some((row) => selectedRowIds.has(row[rowIdField])) && !isAllSelected;
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -236,19 +222,15 @@ export const TableContent = <T extends Record<string, any>>({
                 />
               </TableCell>
               {columns.map((column) => (
-                <TableCell 
-                  key={column.key} 
-                  sx={{ 
+                <TableCell
+                  key={column.key}
+                  sx={{
                     fontWeight: 600,
                     width: column.width,
-                    padding: 0
+                    padding: 0,
                   }}
                 >
-                  <SortableHeader 
-                    column={column} 
-                    sortConfig={sortConfig} 
-                    onSort={onSort} 
-                  />
+                  <SortableHeader column={column} sortConfig={sortConfig} onSort={onSort} />
                 </TableCell>
               ))}
               {(onRowEdit || onRowAction) && (
@@ -260,9 +242,9 @@ export const TableContent = <T extends Record<string, any>>({
             {data.map((row, index) => (
               <TableRow
                 key={row[rowIdField] || index}
-                sx={{ 
+                sx={{
                   '&:hover': { bgcolor: 'grey.50' },
-                  '&:last-child td, &:last-child th': { border: 0 }
+                  '&:last-child td, &:last-child th': { border: 0 },
                 }}
               >
                 <TableCell padding="checkbox">
@@ -291,8 +273,8 @@ export const TableContent = <T extends Record<string, any>>({
                       )} */}
                       {/* Action button for row - displays a menu with edit and delete options when clicked */}
                       {onRowAction && (
-                        <IconButton 
-                          size="small" 
+                        <IconButton
+                          size="small"
                           sx={{ color: 'grey.600' }}
                           onClick={(e) => handleClick(e, row)}
                           aria-label="more options"
@@ -313,8 +295,8 @@ export const TableContent = <T extends Record<string, any>>({
         anchorEl={anchorEl}
         onClose={handleClose}
         onEdit={handleEdit}
-        // onDelete={handleDelete}
+        onDelete={handleDelete}
       />
     </Paper>
   );
-}; 
+};

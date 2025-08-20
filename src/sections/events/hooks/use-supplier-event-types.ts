@@ -66,7 +66,7 @@ export const useUpdateSupplierEventTypes = () => {
   });
 };
 
-// Delete supplier event types
+// Delete supplier event types (all)
 export const useDeleteSupplierEventTypes = () => {
   const queryClient = useQueryClient();
 
@@ -79,6 +79,23 @@ export const useDeleteSupplierEventTypes = () => {
     onError: (error: any) => {
       console.error('Failed to delete event types:', error);
       toast.error(error?.response?.data?.message || 'Failed to delete event types');
+    },
+  });
+};
+
+// Delete individual supplier event type
+export const useDeleteSupplierEventType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => eventsApi.deleteSupplierEventType(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: supplierEventTypesKeys.all });
+      toast.success('Event type deleted successfully!');
+    },
+    onError: (error: any) => {
+      console.error('Failed to delete event type:', error);
+      toast.error(error?.response?.data?.message || 'Failed to delete event type');
     },
   });
 };
