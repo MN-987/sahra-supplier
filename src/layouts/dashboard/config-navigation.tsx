@@ -96,7 +96,7 @@ export function useNavData() {
             icon: ICONS.event,
             children: [
               { title: 'List', path: paths.dashboard.management.events },
-
+              { title: 'Create', path: paths.dashboard.management.createEvent },
             ],
           },
           {

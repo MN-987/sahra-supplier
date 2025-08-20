@@ -95,7 +95,10 @@ export function RHFMultiSelect({
 }: RHFMultiSelectProps) {
   const { control } = useFormContext();
 
-  const renderValues = (selectedIds: string[]) => {
+
+  const renderValues = (value: unknown) => {
+    const selectedIds = Array.isArray(value) ? value as string[] : [];
+
     const selectedItems = options.filter((item) => selectedIds.includes(item.value));
 
     if (!selectedItems.length && placeholder) {
