@@ -72,12 +72,12 @@ const CreateEventSchema = Yup.object().shape({
 export default function CreateEvent() {
   const router = useRouter();
   const createEventTypes = useCreateSupplierEventTypes();
-  const { data: eventTypesData, isLoading: isLoadingEventTypes, error: eventTypesError } = useEventTypes();
-  console.log(eventTypesData,"adsdds");
-
+  const {
+    data: eventTypesData,
+    isLoading: isLoadingEventTypes,
+    error: eventTypesError,
+  } = useEventTypes();
   const eventTypes = eventTypesData?.data?.event_types || [];
-  console.log(eventTypes,"dsdds");
-
   const defaultValues: CreateEventFormData = {
     event_types: [
       {
@@ -157,7 +157,9 @@ export default function CreateEvent() {
           {isLoadingEventTypes && (
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}
+                >
                   <CircularProgress />
                   <Typography sx={{ ml: 2 }}>Loading event types...</Typography>
                 </Box>
@@ -177,148 +179,152 @@ export default function CreateEvent() {
 
           {!isLoadingEventTypes && !eventTypesError && (
             <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-                Event Information
-              </Typography>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+                  Event Information
+                </Typography>
 
-              <Stack spacing={3}>
-                {fields.map((field, index) => (
-                  <Card
-                    key={field.id}
-                    variant="outlined"
-                    sx={{
-                      p: 3,
-                      position: 'relative',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    {/* Remove Event Button */}
-                    {fields.length > 1 && (
-                      <IconButton
-                        onClick={() => handleRemoveEvent(index)}
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          color: 'error.main',
-                        }}
-                      >
-                        <Iconify icon="mingcute:close-line" />
-                      </IconButton>
-                    )}
-
-                    <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
-                      Event Type #{index + 1}
-                    </Typography>
-
-                    <Grid container spacing={3}>
-                      {/* Event Type Dropdown */}
-                      <Grid item xs={12} md={6}>
-                        <RHFSelect
-                          name={`event_types.${index}.event_type_id`}
-                          label="What type of events do you organize?"
-                          placeholder="Select an event type"
-                          disabled={isLoadingEventTypes}
+                <Stack spacing={3}>
+                  {fields.map((field, index) => (
+                    <Card
+                      key={field.id}
+                      variant="outlined"
+                      sx={{
+                        p: 3,
+                        position: 'relative',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      {/* Remove Event Button */}
+                      {fields.length > 1 && (
+                        <IconButton
+                          onClick={() => handleRemoveEvent(index)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            color: 'error.main',
+                          }}
                         >
-                          <MenuItem value="">
-                            <em>Select an event type</em>
-                          </MenuItem>
-                          {eventTypes.map((eventType) => (
-                            <MenuItem key={eventType.id} value={eventType.id}>
-                              {eventType.name}
+                          <Iconify icon="mingcute:close-line" />
+                        </IconButton>
+                      )}
+
+                      <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
+                        Event Type #{index + 1}
+                      </Typography>
+
+                      <Grid container spacing={3}>
+                        {/* Event Type Dropdown */}
+                        <Grid item xs={12} md={6}>
+                          <RHFSelect
+                            name={`event_types.${index}.event_type_id`}
+                            label="What type of events do you organize?"
+                            placeholder="Select an event type"
+                            disabled={isLoadingEventTypes}
+                          >
+                            <MenuItem value="">
+                              <em>Select an event type</em>
                             </MenuItem>
-                          ))}
-                        </RHFSelect>
-                        {eventTypesError && (
-                          <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                            Failed to load event types. Please try again.
-                          </Typography>
-                        )}
-                      </Grid>
+                            {eventTypes.map((eventType) => (
+                              <MenuItem key={eventType.id} value={eventType.id}>
+                                {eventType.name}
+                              </MenuItem>
+                            ))}
+                          </RHFSelect>
+                          {eventTypesError && (
+                            <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                              Failed to load event types. Please try again.
+                            </Typography>
+                          )}
+                        </Grid>
 
-                      {/* Minimum Capacity */}
-                      <Grid item xs={12} sm={6} md={3}>
-                        <RHFTextField
-                          name={`event_types.${index}.min_capacity`}
-                          label="Minimum Capacity"
-                          placeholder="Enter minimum capacity"
-                          type="number"
-                          inputProps={{ min: 1 }}
-                          InputProps={{
-                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>people</Box>,
-                          }}
-                        />
-                      </Grid>
+                        {/* Minimum Capacity */}
+                        <Grid item xs={12} sm={6} md={3}>
+                          <RHFTextField
+                            name={`event_types.${index}.min_capacity`}
+                            label="Minimum Capacity"
+                            placeholder="Enter minimum capacity"
+                            type="number"
+                            inputProps={{ min: 1 }}
+                            InputProps={{
+                              endAdornment: (
+                                <Box sx={{ ml: 1, color: 'text.secondary' }}>people</Box>
+                              ),
+                            }}
+                          />
+                        </Grid>
 
-                      {/* Maximum Capacity */}
-                      <Grid item xs={12} sm={6} md={3}>
-                        <RHFTextField
-                          name={`event_types.${index}.max_capacity`}
-                          label="Maximum Capacity"
-                          placeholder="Enter maximum capacity"
-                          type="number"
-                          inputProps={{ min: 1 }}
-                          InputProps={{
-                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>people</Box>,
-                          }}
-                        />
+                        {/* Maximum Capacity */}
+                        <Grid item xs={12} sm={6} md={3}>
+                          <RHFTextField
+                            name={`event_types.${index}.max_capacity`}
+                            label="Maximum Capacity"
+                            placeholder="Enter maximum capacity"
+                            type="number"
+                            inputProps={{ min: 1 }}
+                            InputProps={{
+                              endAdornment: (
+                                <Box sx={{ ml: 1, color: 'text.secondary' }}>people</Box>
+                              ),
+                            }}
+                          />
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
 
-                {/* Add Event Button */}
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  {/* Add Event Button */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Iconify icon="mingcute:add-line" />}
+                      onClick={handleAddEvent}
+                      sx={{
+                        borderStyle: 'dashed',
+
+                        py: 2,
+                        px: 4,
+                      }}
+                    >
+                      Add Another Event Type
+                    </Button>
+                  </Box>
+                </Stack>
+
+                <Divider sx={{ my: 4 }} />
+
+                {/* Form Actions */}
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{
+                    justifyContent: 'flex-end',
+                    pt: 2,
+                  }}
+                >
                   <Button
                     variant="outlined"
-                    startIcon={<Iconify icon="mingcute:add-line" />}
-                    onClick={handleAddEvent}
-                    sx={{
-                      borderStyle: 'dashed',
-
-                      py: 2,
-                      px: 4,
-                    }}
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                    size="large"
                   >
-                    Add Another Event Type
+                    Cancel
                   </Button>
-                </Box>
-              </Stack>
-
-              <Divider sx={{ my: 4 }} />
-
-              {/* Form Actions */}
-              <Stack
-                direction="row"
-                spacing={2}
-                sx={{
-                  justifyContent: 'flex-end',
-                  pt: 2,
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  onClick={handleCancel}
-                  disabled={isSubmitting}
-                  size="large"
-                >
-                  Cancel
-                </Button>
-                <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  loading={isSubmitting}
-                  loadingPosition="start"
-                  startIcon={<Iconify icon="mingcute:save-line" />}
-                  size="large"
-                >
-                  Create Events
-                </LoadingButton>
-              </Stack>
-            </CardContent>
-          </Card>
+                  <LoadingButton
+                    type="submit"
+                    variant="contained"
+                    loading={isSubmitting}
+                    loadingPosition="start"
+                    startIcon={<Iconify icon="mingcute:save-line" />}
+                    size="large"
+                  >
+                    Create Events
+                  </LoadingButton>
+                </Stack>
+              </CardContent>
+            </Card>
           )}
         </FormProvider>
       </Container>

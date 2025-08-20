@@ -1,4 +1,3 @@
-
 import { api } from './base';
 
 // Types for event types (available options)
@@ -16,7 +15,9 @@ export interface EventTypesResponse {
 
 // Types for supplier event types
 export interface SupplierEventType {
+  id: string;
   event_type_id: string;
+  supplier_id: string;
   min_capacity: number;
   max_capacity: number;
 }
@@ -26,13 +27,14 @@ export interface SupplierEventTypesRequest {
 }
 
 export interface SupplierEventTypesResponse {
-  event_types: SupplierEventType[];
+  data: SupplierEventType[];
+  message: string;
+  status: number;
 }
 
 export const eventsApi = {
   // Get available event types for selection
-  getEventTypes: async (): Promise<EventTypesResponse> =>
-    api.get('/supplier/event-types'),
+  getEventTypes: async (): Promise<EventTypesResponse> => api.get('/supplier/event-types'),
 
   // Supplier Event Types CRUD operations
   // Get supplier event types
@@ -40,14 +42,19 @@ export const eventsApi = {
     api.get('/supplier/supplier-event-types'),
 
   // Create supplier event types
-  createSupplierEventTypes: async (data: SupplierEventTypesRequest): Promise<SupplierEventTypesResponse> =>
-    api.post('/supplier/supplier-event-types', data),
+  createSupplierEventTypes: async (
+    data: SupplierEventTypesRequest
+  ): Promise<SupplierEventTypesResponse> => api.post('/supplier/supplier-event-types', data),
 
   // Update supplier event types
-  updateSupplierEventTypes: async (data: SupplierEventTypesRequest): Promise<SupplierEventTypesResponse> =>
-    api.put('/supplier/supplier-event-types', data),
+  updateSupplierEventTypes: async (
+    data: SupplierEventTypesRequest
+  ): Promise<SupplierEventTypesResponse> => api.put('/supplier/supplier-event-types', data),
 
-  // Delete supplier event types
-  deleteSupplierEventTypes: async (): Promise<void> =>
-    api.delete('/supplier/supplier-event-types'),
+  // Delete supplier event types (all)
+  deleteSupplierEventTypes: async (): Promise<void> => api.delete('/supplier/supplier-event-types'),
+
+  // Delete individual supplier event type
+  deleteSupplierEventType: async (id: string): Promise<void> =>
+    api.delete(`/supplier/supplier-event-types/${id}`),
 };
