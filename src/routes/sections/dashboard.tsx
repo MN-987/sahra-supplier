@@ -16,7 +16,10 @@ const User = lazy(() => import('src/pages/dashboard/User'));
 const Vendor = lazy(() => import('src/pages/dashboard/Vendor'));
 const Booking = lazy(() => import('src/pages/dashboard/Booking'));
 const Events = lazy(() => import('src/pages/dashboard/events'));
+<<<<<<< HEAD
 const CreateEvent = lazy(() => import('src/pages/dashboard/CreateEvent'));
+=======
+>>>>>>> 81a45240a7c12ffa072bd50a48228d030b9ab3f1
 const Profile = lazy(() => import('src/pages/dashboard/Profile'));
 const Services = lazy(() => import('src/pages/dashboard/Services'));
 const CreateService = lazy(() => import('src/pages/dashboard/CreateService'));
