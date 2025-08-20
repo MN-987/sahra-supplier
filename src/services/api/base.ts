@@ -3,7 +3,7 @@ import { API_BASE_URL } from 'src/config-global';
 
 // Create axios instance
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL || 'http://localhost:3001',
+  baseURL: API_BASE_URL ,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

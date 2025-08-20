@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate, useLocation } from 'react-router-dom';
 // @mui
+import { paths } from 'src/routes/paths';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
@@ -19,8 +20,9 @@ import RHFTextField from '../../components/hook-form/rhf-text-field';
 import Iconify from '../../components/iconify';
 import RouterLink from '../../routes/components/router-link';
 import FormErrorAlert from '../../components/form-error-alert';
+
 // routes
-import { paths } from 'src/routes/paths';
+
 
 // ----------------------------------------------------------------------
 

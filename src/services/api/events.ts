@@ -1,54 +1,53 @@
-import {
-  Event,
-  CreateEventData,
-  UpdateEventData,
-  PaginationParams,
-  PaginatedResponse,
-} from 'src/types/api';
+
 import { api } from './base';
 
+// Types for event types (available options)
+export interface EventType {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface EventTypesResponse {
+  data: {
+    event_types: EventType[];
+  };
+}
+
+// Types for supplier event types
+export interface SupplierEventType {
+  event_type_id: string;
+  min_capacity: number;
+  max_capacity: number;
+}
+
+export interface SupplierEventTypesRequest {
+  event_types: SupplierEventType[];
+}
+
+export interface SupplierEventTypesResponse {
+  event_types: SupplierEventType[];
+}
+
 export const eventsApi = {
-  // Get paginated events list
-  getEvents: async (params: PaginationParams): Promise<PaginatedResponse<Event>> =>
-    api.get('/api/events', { params }),
+  // Get available event types for selection
+  getEventTypes: async (): Promise<EventTypesResponse> =>
+    api.get('/supplier/event-types'),
 
-  // Get single event by ID
-  getEvent: async (id: string): Promise<Event> => api.get(`/api/events/${id}`),
+  // Supplier Event Types CRUD operations
+  // Get supplier event types
+  getSupplierEventTypes: async (): Promise<SupplierEventTypesResponse> =>
+    api.get('/supplier/supplier-event-types'),
 
-  // Create new event
-  createEvent: async (data: CreateEventData): Promise<Event> => api.post('/api/events', data),
+  // Create supplier event types
+  createSupplierEventTypes: async (data: SupplierEventTypesRequest): Promise<SupplierEventTypesResponse> =>
+    api.post('/supplier/supplier-event-types', data),
 
-  // Update event
-  updateEvent: async (id: string, data: UpdateEventData): Promise<Event> =>
-    api.put(`/api/events/${id}`, data),
+  // Update supplier event types
+  updateSupplierEventTypes: async (data: SupplierEventTypesRequest): Promise<SupplierEventTypesResponse> =>
+    api.put('/supplier/supplier-event-types', data),
 
-  // Delete event
-  deleteEvent: async (id: string): Promise<void> => api.delete(`/api/events/${id}`),
-
-  // Update event status
-  updateEventStatus: async (
-    id: string,
-    status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
-  ): Promise<Event> => api.patch(`/api/events/${id}/status`, { status }),
-
-  // Get events by status
-  getEventsByStatus: async (status: string): Promise<Event[]> =>
-    api.get(`/api/events/status/${status}`),
-
-  // Get events by date range
-  getEventsByDateRange: async (startDate: string, endDate: string): Promise<Event[]> =>
-    api.get('/api/events/date-range', {
-      params: { startDate, endDate },
-    }),
-
-  // Bulk delete events
-  bulkDeleteEvents: async (ids: string[]): Promise<void> =>
-    api.post('/api/events/bulk-delete', { ids }),
-
-  // Export events
-  exportEvents: async (params: PaginationParams): Promise<Blob> =>
-    api.get('/api/events/export', {
-      params,
-      responseType: 'blob',
-    }),
+  // Delete supplier event types
+  deleteSupplierEventTypes: async (): Promise<void> =>
+    api.delete('/supplier/supplier-event-types'),
 };

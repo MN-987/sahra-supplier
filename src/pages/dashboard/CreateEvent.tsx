@@ -15,61 +15,51 @@ import {
   IconButton,
   Divider,
   MenuItem,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
-import { toast } from 'sonner';
 import { useRouter } from 'src/routes/hooks';
 // components
 import FormProvider from 'src/components/hook-form/form-provider';
 import { RHFTextField } from 'src/components/hook-form';
 import { RHFSelect } from 'src/components/hook-form/rhf-select';
 import Iconify from 'src/components/iconify';
+// hooks
+import { useCreateSupplierEventTypes, useEventTypes } from 'src/sections/events/hooks';
 
 // ----------------------------------------------------------------------
 
-const EVENT_TYPE_OPTIONS = [
-  'Wedding',
-  'Corporate Event',
-  'Birthday Party',
-  'Conference',
-  'Exhibition',
-  'Concert',
-  'Festival',
-  'Workshop',
-  'Seminar',
-  'Product Launch',
-  'Gala Dinner',
-  'Networking Event',
-];
-
 interface EventItem {
-  event_type: string;
-  min_capacity: string;
-  max_capacity: string;
+  event_type_id: string;
+  min_capacity: number;
+  max_capacity: number;
 }
 
 interface CreateEventFormData {
-  events: EventItem[];
+  event_types: EventItem[];
 }
 
 const CreateEventSchema = Yup.object().shape({
-  events: Yup.array()
+  event_types: Yup.array()
     .of(
       Yup.object().shape({
-        event_type: Yup.string().required('Event type is required'),
-        min_capacity: Yup.string()
+        event_type_id: Yup.string().required('Event type is required'),
+        min_capacity: Yup.number()
           .required('Minimum capacity is required')
-          .matches(/^\d+$/, 'Must be a valid number'),
-        max_capacity: Yup.string()
+          .positive('Must be a positive number')
+          .integer('Must be a whole number'),
+        max_capacity: Yup.number()
           .required('Maximum capacity is required')
-          .matches(/^\d+$/, 'Must be a valid number')
+          .positive('Must be a positive number')
+          .integer('Must be a whole number')
           .test(
             'max-greater-than-min',
             'Maximum capacity must be greater than minimum capacity',
             (value, context) => {
               const { min_capacity } = context.parent;
               if (min_capacity && value) {
-                return parseInt(value, 10) > parseInt(min_capacity, 10);
+                return value > min_capacity;
               }
               return true;
             }
@@ -81,13 +71,19 @@ const CreateEventSchema = Yup.object().shape({
 
 export default function CreateEvent() {
   const router = useRouter();
+  const createEventTypes = useCreateSupplierEventTypes();
+  const { data: eventTypesData, isLoading: isLoadingEventTypes, error: eventTypesError } = useEventTypes();
+  console.log(eventTypesData,"adsdds");
+
+  const eventTypes = eventTypesData?.data?.event_types || [];
+  console.log(eventTypes,"dsdds");
 
   const defaultValues: CreateEventFormData = {
-    events: [
+    event_types: [
       {
-        event_type: '',
-        min_capacity: '',
-        max_capacity: '',
+        event_type_id: '',
+        min_capacity: 0,
+        max_capacity: 0,
       },
     ],
   };
@@ -105,14 +101,14 @@ export default function CreateEvent() {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'events',
+    name: 'event_types',
   });
 
   const handleAddEvent = () => {
     append({
-      event_type: '',
-      min_capacity: '',
-      max_capacity: '',
+      event_type_id: '',
+      min_capacity: 0,
+      max_capacity: 0,
     });
   };
 
@@ -124,16 +120,18 @@ export default function CreateEvent() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      console.log('Events data to save:', data);
+      // Transform form data to API format
+      const apiPayload = {
+        event_types: data.event_types || [],
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use the mutation hook to create event types
+      await createEventTypes.mutateAsync(apiPayload);
 
-      toast.success('Events created successfully!');
       router.push('/dashboard/management/events');
     } catch (error) {
       console.error('Failed to create events:', error);
-      toast.error('Failed to create events. Please try again.');
+      // Error handling is done through React Query in the hook
     }
   });
 
@@ -156,7 +154,29 @@ export default function CreateEvent() {
         </Stack>
 
         <FormProvider methods={methods} onSubmit={onSubmit}>
-          <Card>
+          {isLoadingEventTypes && (
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                  <CircularProgress />
+                  <Typography sx={{ ml: 2 }}>Loading event types...</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+
+          {eventTypesError && !isLoadingEventTypes && (
+            <Card>
+              <CardContent>
+                <Alert severity="error">
+                  Failed to load event types. Please refresh the page and try again.
+                </Alert>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isLoadingEventTypes && !eventTypesError && (
+            <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
                 Event Information
@@ -197,25 +217,31 @@ export default function CreateEvent() {
                       {/* Event Type Dropdown */}
                       <Grid item xs={12} md={6}>
                         <RHFSelect
-                          name={`events.${index}.event_type`}
+                          name={`event_types.${index}.event_type_id`}
                           label="What type of events do you organize?"
                           placeholder="Select an event type"
+                          disabled={isLoadingEventTypes}
                         >
                           <MenuItem value="">
                             <em>Select an event type</em>
                           </MenuItem>
-                          {EVENT_TYPE_OPTIONS.map((eventType) => (
-                            <MenuItem key={eventType} value={eventType}>
-                              {eventType}
+                          {eventTypes.map((eventType) => (
+                            <MenuItem key={eventType.id} value={eventType.id}>
+                              {eventType.name}
                             </MenuItem>
                           ))}
                         </RHFSelect>
+                        {eventTypesError && (
+                          <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                            Failed to load event types. Please try again.
+                          </Typography>
+                        )}
                       </Grid>
 
                       {/* Minimum Capacity */}
                       <Grid item xs={12} sm={6} md={3}>
                         <RHFTextField
-                          name={`events.${index}.min_capacity`}
+                          name={`event_types.${index}.min_capacity`}
                           label="Minimum Capacity"
                           placeholder="Enter minimum capacity"
                           type="number"
@@ -229,7 +255,7 @@ export default function CreateEvent() {
                       {/* Maximum Capacity */}
                       <Grid item xs={12} sm={6} md={3}>
                         <RHFTextField
-                          name={`events.${index}.max_capacity`}
+                          name={`event_types.${index}.max_capacity`}
                           label="Maximum Capacity"
                           placeholder="Enter maximum capacity"
                           type="number"
@@ -293,6 +319,7 @@ export default function CreateEvent() {
               </Stack>
             </CardContent>
           </Card>
+          )}
         </FormProvider>
       </Container>
     </>
