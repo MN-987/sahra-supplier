@@ -1,5 +1,6 @@
 import { Controller, useFormContext } from 'react-hook-form';
 import { MuiOtpInput, MuiOtpInputProps } from 'mui-one-time-password-input';
+import React from 'react';
 // @mui
 import FormHelperText from '@mui/material/FormHelperText';
 
@@ -12,13 +13,15 @@ type RHFCodesProps = MuiOtpInputProps & {
 export default function RHFCode({ name, ...other }: RHFCodesProps) {
   const { control } = useFormContext();
 
+  const OtpInput = MuiOtpInput as React.ComponentType<any>;
+
   return (
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState: { error } }) => (
         <div>
-          <MuiOtpInput
+          <OtpInput
             {...field}
             autoFocus
             gap={1.5}
