@@ -22,8 +22,19 @@ export interface SupplierEventType {
   max_capacity: number;
 }
 
+// Types for creating supplier event types (without id and supplier_id)
+export interface SupplierEventTypeCreate {
+  event_type_id: string;
+  min_capacity: number;
+  max_capacity: number;
+}
+
 export interface SupplierEventTypesRequest {
   event_types: SupplierEventType[];
+}
+
+export interface SupplierEventTypesCreateRequest {
+  event_types: SupplierEventTypeCreate[];
 }
 
 export interface SupplierEventTypesResponse {
@@ -43,7 +54,7 @@ export const eventsApi = {
 
   // Create supplier event types
   createSupplierEventTypes: async (
-    data: SupplierEventTypesRequest
+    data: SupplierEventTypesCreateRequest
   ): Promise<SupplierEventTypesResponse> => api.post('/supplier/supplier-event-types', data),
 
   // Update supplier event types
