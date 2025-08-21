@@ -5,7 +5,20 @@ import { paths } from 'src/routes/paths';
 // ----------------------------------------------------------------------
 
 export const HOST_API = import.meta.env.VITE_HOST_API;
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Ensure HTTPS in production
+const getAPIBaseURL = () => {
+  const envURL = import.meta.env.VITE_API_BASE_URL;
+  
+  // If we're in production and URL is HTTP, convert to HTTPS
+  if (import.meta.env.PROD && envURL?.startsWith('http://')) {
+    return envURL.replace('http://', 'https://');
+  }
+  
+  return envURL;
+};
+
+export const API_BASE_URL = getAPIBaseURL();
 export const ASSETS_API = import.meta.env.VITE_ASSETS_API;
 
 export const FIREBASE_API = {
