@@ -9,12 +9,12 @@ export const HOST_API = import.meta.env.VITE_HOST_API;
 // Ensure HTTPS in production
 const getAPIBaseURL = () => {
   const envURL = import.meta.env.VITE_API_BASE_URL;
-  
+
   // If we're in production and URL is HTTP, convert to HTTPS
   if (import.meta.env.PROD && envURL?.startsWith('http://')) {
     return envURL.replace('http://', 'https://');
   }
-  
+
   return envURL;
 };
 
