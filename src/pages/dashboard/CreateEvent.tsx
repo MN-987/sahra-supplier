@@ -27,6 +27,7 @@ import { RHFSelect } from 'src/components/hook-form/rhf-select';
 import Iconify from 'src/components/iconify';
 // hooks
 import { useCreateSupplierEventTypes, useEventTypes } from 'src/sections/events/hooks';
+import { useCurrentUser } from 'src/hooks/api/use-auth';
 
 // ----------------------------------------------------------------------
 
@@ -71,6 +72,7 @@ const CreateEventSchema = Yup.object().shape({
 
 export default function CreateEvent() {
   const router = useRouter();
+  const { data: user } = useCurrentUser();
   const createEventTypes = useCreateSupplierEventTypes();
   const {
     data: eventTypesData,
@@ -120,9 +122,14 @@ export default function CreateEvent() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      // Transform form data to API format
+      // Transform form data to API format - add supplier_id to each event type
       const apiPayload = {
-        event_types: data.event_types || [],
+        event_types: (data.event_types || []).map((eventType) => ({
+          event_type_id: eventType.event_type_id,
+          supplier_id: user?.id || '', // Use the current user's ID as supplier_id
+          min_capacity: eventType.min_capacity,
+          max_capacity: eventType.max_capacity,
+        })),
       };
 
       // Use the mutation hook to create event types
