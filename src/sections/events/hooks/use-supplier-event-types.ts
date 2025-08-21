@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { eventsApi, SupplierEventTypesRequest } from 'src/services/api/events';
+import {
+  eventsApi,
+  SupplierEventTypesRequest,
+  SupplierEventTypesCreateRequest,
+} from 'src/services/api/events';
 
 // Query keys
 export const eventTypesKeys = {
@@ -37,7 +41,7 @@ export const useCreateSupplierEventTypes = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: SupplierEventTypesRequest) => eventsApi.createSupplierEventTypes(data),
+    mutationFn: (data: SupplierEventTypesCreateRequest) => eventsApi.createSupplierEventTypes(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplierEventTypesKeys.all });
       toast.success('Event types created successfully!');

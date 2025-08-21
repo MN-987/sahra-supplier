@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import * as Yup from 'yup';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Container,
@@ -14,24 +14,33 @@ import {
   Stack,
   Tab,
   Tabs,
+  Button,
+  IconButton,
+  MenuItem,
+  Divider,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { toast } from 'sonner';
 // hooks
 import { useCurrentUser } from 'src/hooks/api/use-auth';
+import { useBusinessProfile, useUpdateBusinessProfile } from 'src/hooks/api/use-business-profile';
 // components
 import { LoadingScreen } from 'src/components/loading-screen';
 import FormProvider from 'src/components/hook-form/form-provider';
-import { RHFTextField, RHFMultiCheckbox } from 'src/components/hook-form';
+import { RHFTextField, RHFMultiCheckbox, RHFSelect } from 'src/components/hook-form';
 import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-interface ProfileFormData {
-  // Personal Profile Fields
+interface SocialLink {
+  platform: string;
+  url: string;
+}
+
+interface PersonalProfileFormData {
   service_areas_covered?: string[];
   company_name: string;
-  description?: string | null;
+  description?: string;
   location: string;
   address: string;
   registration_number: string;
@@ -39,23 +48,22 @@ interface ProfileFormData {
   contact_number: string;
   contact_name: string;
   preferred_contact_method?: string[];
-
-  // Business Profile Fields
-  repeat_rate?: string | null;
-  social_media_profiles?: string | null;
-  any_other_information?: string | null;
-  setup_and_teardown_time?: string | null;
-  backup_emergency_options?: string | null;
-  licenses_and_certifications?: string | null;
-  cancellation_policy_days?: number | null;
-  deposit_requirements?: number | null;
-  bank_details?: string | null;
-  minimum_order_value_aed?: number | null;
-  minimum_lead_time_days?: number | null;
 }
 
-const ProfileSchema = Yup.object().shape({
-  // Personal Profile Validation
+interface BusinessProfileFormData {
+  repeat_rate: string;
+  backup_emergency_options: string;
+  cancellation_policy: string;
+  deposit_requirements: string;
+  bank_details: string;
+  minimum_order_value_aed: number;
+  minimum_lead_time_days: number;
+  setup_teardown_time: string;
+  any_other_information?: string;
+  social_links?: SocialLink[];
+}
+
+const PersonalProfileSchema = Yup.object().shape({
   service_areas_covered: Yup.array()
     .of(Yup.string())
     .min(1, 'At least one service area is required'),
@@ -74,20 +82,43 @@ const ProfileSchema = Yup.object().shape({
   preferred_contact_method: Yup.array()
     .of(Yup.string())
     .min(1, 'At least one contact method is required'),
-
-  // Business Profile Validation
-  repeat_rate: Yup.string().nullable(),
-  social_media_profiles: Yup.string().nullable(),
-  any_other_information: Yup.string().nullable(),
-  setup_and_teardown_time: Yup.string().nullable(),
-  backup_emergency_options: Yup.string().nullable(),
-  licenses_and_certifications: Yup.string().nullable(),
-  cancellation_policy_days: Yup.number().nullable().positive('Must be a positive number'),
-  deposit_requirements: Yup.number().nullable().positive('Must be a positive number'),
-  bank_details: Yup.string().nullable(),
-  minimum_order_value_aed: Yup.number().nullable().positive('Must be a positive number'),
-  minimum_lead_time_days: Yup.number().nullable().positive('Must be a positive number'),
 });
+
+const BusinessProfileSchema = Yup.object().shape({
+  repeat_rate: Yup.string().required('Repeat rate is required'),
+  backup_emergency_options: Yup.string().required('Backup/emergency options are required'),
+  cancellation_policy: Yup.string().required('Cancellation policy is required'),
+  deposit_requirements: Yup.string().required('Deposit requirements are required'),
+  bank_details: Yup.string().required('Bank details are required'),
+  minimum_order_value_aed: Yup.number()
+    .required('Minimum order value is required')
+    .positive('Must be a positive number'),
+  minimum_lead_time_days: Yup.number()
+    .required('Minimum lead time is required')
+    .positive('Must be a positive number'),
+  setup_teardown_time: Yup.string().required('Setup/teardown time is required'),
+  any_other_information: Yup.string().optional(),
+  social_links: Yup.array()
+    .of(
+      Yup.object().shape({
+        platform: Yup.string().required('Platform is required'),
+        url: Yup.string().url('Must be a valid URL').required('URL is required'),
+      })
+    )
+    .optional(),
+});
+
+// Social media platform options
+const SOCIAL_PLATFORMS = [
+  { value: 'instagram', label: 'Instagram', icon: 'ri:instagram-line' },
+  { value: 'facebook', label: 'Facebook', icon: 'ri:facebook-line' },
+  { value: 'twitter', label: 'Twitter', icon: 'ri:twitter-line' },
+  { value: 'linkedin', label: 'LinkedIn', icon: 'ri:linkedin-line' },
+  { value: 'youtube', label: 'YouTube', icon: 'ri:youtube-line' },
+  { value: 'tiktok', label: 'TikTok', icon: 'ri:tiktok-line' },
+  { value: 'website', label: 'Website', icon: 'ri:global-line' },
+  { value: 'other', label: 'Other', icon: 'ri:links-line' },
+];
 
 const SERVICE_AREAS = [
   'Dubai',
@@ -105,8 +136,14 @@ export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
   const [currentTab, setCurrentTab] = useState('personal');
 
-  const defaultValues: ProfileFormData = {
-    // Personal Profile Fields
+  // Only fetch business profile when business tab is active
+  const { data: businessProfile, isLoading: isBusinessProfileLoading } = useBusinessProfile(
+    currentTab === 'business'
+  );
+  const updateBusinessProfile = useUpdateBusinessProfile();
+
+  // Personal Profile Form
+  const personalDefaultValues: PersonalProfileFormData = {
     service_areas_covered: [],
     company_name: '',
     description: '',
@@ -117,37 +154,62 @@ export default function ProfilePage() {
     contact_number: '',
     contact_name: '',
     preferred_contact_method: [],
-
-    // Business Profile Fields
-    repeat_rate: '',
-    social_media_profiles: '',
-    any_other_information: '',
-    setup_and_teardown_time: '',
-    backup_emergency_options: '',
-    licenses_and_certifications: '',
-    cancellation_policy_days: null,
-    deposit_requirements: null,
-    bank_details: '',
-    minimum_order_value_aed: null,
-    minimum_lead_time_days: null,
   };
 
-  const methods = useForm({
-    resolver: yupResolver(ProfileSchema),
-    defaultValues,
+  const personalMethods = useForm({
+    resolver: yupResolver(PersonalProfileSchema),
+    defaultValues: personalDefaultValues,
+  });
+
+  // Business Profile Form
+  const businessDefaultValues: BusinessProfileFormData = {
+    repeat_rate: '',
+    backup_emergency_options: '',
+    cancellation_policy: '',
+    deposit_requirements: '',
+    bank_details: '',
+    minimum_order_value_aed: 0,
+    minimum_lead_time_days: 0,
+    setup_teardown_time: '',
+    any_other_information: '',
+    social_links: [],
+  };
+
+  const businessMethods = useForm({
+    resolver: yupResolver(BusinessProfileSchema),
+    defaultValues: businessDefaultValues,
   });
 
   const {
-    handleSubmit,
-    reset,
-    formState: { isSubmitting },
-  } = methods;
+    control: personalControl,
+    handleSubmit: handlePersonalSubmit,
+    reset: resetPersonal,
+    formState: { isSubmitting: isPersonalSubmitting },
+  } = personalMethods;
 
-  // Update form when user data loads
+  const {
+    control: businessControl,
+    handleSubmit: handleBusinessSubmit,
+    reset: resetBusiness,
+    formState: { isSubmitting: isBusinessSubmitting },
+  } = businessMethods;
+
+  const { fields, append, remove } = useFieldArray({
+    control: businessControl,
+    name: 'social_links',
+  });
+
+  // Initialize with one empty social link if none exist
+  useEffect(() => {
+    if (fields.length === 0) {
+      append({ platform: '', url: '' });
+    }
+  }, [fields.length, append]);
+
+  // Update personal form when user data loads
   useEffect(() => {
     if (user) {
-      reset({
-        // Personal Profile Fields
+      resetPersonal({
         service_areas_covered: [],
         company_name: user.name || '',
         description: user.description || '',
@@ -158,38 +220,87 @@ export default function ProfilePage() {
         contact_number: user.phone_number || '',
         contact_name: user.name || '',
         preferred_contact_method: [],
-
-        // Business Profile Fields
-        repeat_rate: '',
-        social_media_profiles: '',
-        any_other_information: '',
-        setup_and_teardown_time: '',
-        backup_emergency_options: '',
-        licenses_and_certifications: '',
-        cancellation_policy_days: null,
-        deposit_requirements: null,
-        bank_details: '',
-        minimum_order_value_aed: null,
-        minimum_lead_time_days: null,
       });
     }
-  }, [user, reset]);
+  }, [user, resetPersonal]);
 
-  const onSubmit = handleSubmit(async (data) => {
+  // Update business form when business profile data loads
+  useEffect(() => {
+    if (businessProfile?.data && currentTab === 'business') {
+      const profile = businessProfile.data;
+
+      // Convert social_media_profiles to social_links format
+      const socialLinks: SocialLink[] = [];
+      if (profile.social_media_profiles) {
+        Object.entries(profile.social_media_profiles).forEach(([platform, url]) => {
+          if (url) {
+            socialLinks.push({ platform, url });
+          }
+        });
+      }
+
+      resetBusiness({
+        repeat_rate: profile.repeat_rate || '',
+        backup_emergency_options: profile.backup_emergency_options || '',
+        cancellation_policy: profile.cancellation_policy || '',
+        deposit_requirements: profile.deposit_requirements || '',
+        bank_details: profile.bank_details || '',
+        minimum_order_value_aed: profile.minimum_order_value_aed || 0,
+        minimum_lead_time_days: profile.minimum_lead_time_days || 0,
+        setup_teardown_time: profile.setup_teardown_time || '',
+        any_other_information: profile.any_other_information || '',
+        social_links: socialLinks.length > 0 ? socialLinks : [{ platform: '', url: '' }],
+      });
+    }
+  }, [businessProfile, resetBusiness, currentTab]);
+
+  // Personal form submit handler
+  const onPersonalSubmit = handlePersonalSubmit(async (data) => {
     try {
-      console.log('Profile data to save:', data);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.success('Profile updated successfully!');
+      // Handle personal profile update here
+      // This would require a separate API endpoint for personal profile
+      console.log('Personal profile data to save:', data);
+      toast.success('Personal profile updated successfully!');
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error('Failed to update personal profile:', error);
+      toast.error('Failed to update personal profile. Please try again.');
     }
   });
 
-  if (isLoading) {
+  // Business form submit handler
+  const onBusinessSubmit = handleBusinessSubmit(async (data) => {
+    try {
+      // Convert social_links back to social_media_profiles format
+      const socialMediaProfiles: { [key: string]: string } = {};
+      if (data.social_links) {
+        data.social_links.forEach((link: SocialLink) => {
+          if (link.platform && link.url) {
+            socialMediaProfiles[link.platform] = link.url;
+          }
+        });
+      }
+
+      const businessData = {
+        repeat_rate: data.repeat_rate,
+        backup_emergency_options: data.backup_emergency_options,
+        cancellation_policy: data.cancellation_policy,
+        deposit_requirements: data.deposit_requirements,
+        bank_details: data.bank_details,
+        minimum_order_value_aed: data.minimum_order_value_aed,
+        minimum_lead_time_days: data.minimum_lead_time_days,
+        setup_teardown_time: data.setup_teardown_time,
+        any_other_information: data.any_other_information || '',
+        social_media_profiles: socialMediaProfiles,
+      };
+
+      await updateBusinessProfile.mutateAsync(businessData);
+    } catch (error) {
+      console.error('Failed to update business profile:', error);
+      // Error handling is done in the mutation
+    }
+  });
+
+  if (isLoading || (currentTab === 'business' && isBusinessProfileLoading)) {
     return <LoadingScreen />;
   }
 
@@ -204,65 +315,65 @@ export default function ProfilePage() {
           Profile
         </Typography>
 
-        <FormProvider methods={methods} onSubmit={onSubmit}>
-          <Grid container spacing={3}>
-            {/* Profile Card */}
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={3} alignItems="center">
-                    <Avatar
-                      sx={{
-                        width: 120,
-                        height: 120,
-                        fontSize: '3rem',
-                        bgcolor: 'primary.main',
-                      }}
-                    >
-                      {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                    </Avatar>
-
-                    <Box textAlign="center">
-                      <Typography variant="h6" gutterBottom>
-                        {user?.name || 'User Name'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {user?.email}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ mt: 1 }}
-                      >
-                        Supplier Account
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Profile Form with Tabs */}
-            <Grid item xs={12} md={8}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Profile Information
-                  </Typography>
-
-                  {/* Tabs */}
-                  <Tabs
-                    value={currentTab}
-                    onChange={(event, newValue) => setCurrentTab(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+        <Grid container spacing={3}>
+          {/* Profile Card */}
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Stack spacing={3} alignItems="center">
+                  <Avatar
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      fontSize: '3rem',
+                      bgcolor: 'primary.main',
+                    }}
                   >
-                    <Tab label="Personal" value="personal" />
-                    <Tab label="Business" value="business" />
-                  </Tabs>
+                    {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                  </Avatar>
 
-                  {/* Personal Profile Tab */}
-                  {currentTab === 'personal' && (
+                  <Box textAlign="center">
+                    <Typography variant="h6" gutterBottom>
+                      {user?.name || 'User Name'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {user?.email}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ mt: 1 }}
+                    >
+                      Supplier Account
+                    </Typography>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Profile Form with Tabs */}
+          <Grid item xs={12} md={8}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Profile Information
+                </Typography>
+
+                {/* Tabs */}
+                <Tabs
+                  value={currentTab}
+                  onChange={(event, newValue) => setCurrentTab(newValue)}
+                  sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+                >
+                  <Tab label="Personal" value="personal" />
+                  <Tab label="Business" value="business" />
+                </Tabs>
+
+                {/* Personal Profile Tab */}
+                {currentTab === 'personal' && (
+                  <FormProvider methods={personalMethods} onSubmit={onPersonalSubmit}>
                     <Grid container spacing={3}>
                       {/* Past Event References */}
                       <Grid item xs={12}>
@@ -387,56 +498,144 @@ export default function ProfilePage() {
                           rows={4}
                         />
                       </Grid>
+
+                      {/* Personal Profile Submit Button */}
+                      <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                          <LoadingButton
+                            type="submit"
+                            variant="contained"
+                            loading={isPersonalSubmitting}
+                            loadingPosition="start"
+                            startIcon={<Iconify icon="mingcute:save-line" />}
+                            size="large"
+                          >
+                            Save Personal Profile
+                          </LoadingButton>
+                        </Box>
+                      </Grid>
                     </Grid>
-                  )}
+                  </FormProvider>
+                )}
 
-                  {/* Business Profile Tab */}
-                  {currentTab === 'business' && (
+                {/* Business Profile Tab */}
+                {currentTab === 'business' && (
+                  <FormProvider methods={businessMethods} onSubmit={onBusinessSubmit}>
                     <Grid container spacing={3}>
-                      {/* Repeat Rate */}
+                      {/* Financial Information - Priority Questions */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                          Financial Information
+                        </Typography>
+                      </Grid>
+
+                      {/* Minimum Order Value in AED */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
-                          name="repeat_rate"
-                          label="Repeat Rate"
-                          placeholder="Enter repeat rate"
+                          name="minimum_order_value_aed"
+                          label="Minimum Order Value (AED)"
+                          placeholder="Enter minimum order value"
+                          type="number"
+                          InputProps={{
+                            startAdornment: <Box sx={{ mr: 1, color: 'text.secondary' }}>AED</Box>,
+                          }}
                         />
                       </Grid>
 
-                      {/* Social Media Profiles */}
+                      {/* Deposit Requirements */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
-                          name="social_media_profiles"
-                          label="Social Media Profiles"
-                          placeholder="Enter social media profiles"
+                          name="deposit_requirements"
+                          label="Deposit Requirements (%)"
+                          placeholder="Enter deposit percentage"
+                          type="number"
+                          InputProps={{
+                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>%</Box>,
+                          }}
                         />
                       </Grid>
 
-                      {/* Any Other Information */}
+                      {/* Bank Details */}
                       <Grid item xs={12}>
                         <RHFTextField
-                          name="any_other_information"
-                          label="Any Other Information"
-                          placeholder="Enter any other information"
+                          name="bank_details"
+                          label="Bank Details"
+                          placeholder="Enter bank account details (IBAN, Account Number, etc.)"
                           multiline
-                          rows={3}
+                          rows={2}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
+                      </Grid>
+
+                      {/* Operational Information */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                          Operational Information
+                        </Typography>
+                      </Grid>
+
+                      {/* Minimum Lead Time in Days */}
+                      <Grid item xs={12} sm={6}>
+                        <RHFTextField
+                          name="minimum_lead_time_days"
+                          label="Minimum Lead Time (Days)"
+                          placeholder="Enter minimum lead time"
+                          type="number"
+                          InputProps={{
+                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>days</Box>,
+                          }}
+                        />
+                      </Grid>
+
+                      {/* Cancellation Policy */}
+                      <Grid item xs={12} sm={6}>
+                        <RHFTextField
+                          name="cancellation_policy"
+                          label="Cancellation Policy"
+                          placeholder="Describe your cancellation policy"
+                          multiline
+                          rows={2}
                         />
                       </Grid>
 
                       {/* Setup and Teardown Time */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
-                          name="setup_and_teardown_time"
+                          name="setup_teardown_time"
                           label="Setup and Teardown Time"
-                          placeholder="e.g. 2 Hours"
+                          placeholder="e.g. 2 hours, 30 minutes"
                         />
+                      </Grid>
+
+                      {/* Repeat Rate */}
+                      <Grid item xs={12} sm={6}>
+                        <RHFTextField
+                          name="repeat_rate"
+                          label="Repeat Rate"
+                          placeholder="e.g. Monthly, Weekly, etc."
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
+                      </Grid>
+
+                      {/* Additional Information */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                          Additional Information
+                        </Typography>
                       </Grid>
 
                       {/* Backup Emergency Options */}
                       <Grid item xs={12}>
                         <RHFTextField
                           name="backup_emergency_options"
-                          label="Backup Emergency Options"
-                          placeholder="Enter backup emergency options"
+                          label="Backup/Emergency Options"
+                          placeholder="Describe your backup plans and emergency options"
                           multiline
                           rows={3}
                         />
@@ -460,77 +659,106 @@ export default function ProfilePage() {
                         />
                       </Grid>
 
-                      {/* Cancellation Policy */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="cancellation_policy_days"
-                          label="Cancellation Policy (Days Before Event)"
-                          placeholder="Enter number of days"
-                          type="number"
-                        />
-                      </Grid>
-
-                      {/* Deposit Requirements */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="deposit_requirements"
-                          label="Deposit Requirements"
-                          placeholder="Enter deposit amount"
-                          type="number"
-                        />
-                      </Grid>
-
-                      {/* Bank Details */}
+                      {/* Any Other Information */}
                       <Grid item xs={12}>
                         <RHFTextField
-                          name="bank_details"
-                          label="Bank Details"
-                          placeholder="Enter bank details"
+                          name="any_other_information"
+                          label="Any Other Information"
+                          placeholder="Additional details about your services, special offerings, etc."
                           multiline
                           rows={3}
                         />
                       </Grid>
 
-                      {/* Minimum Order Value in AED */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="minimum_order_value_aed"
-                          label="Minimum Order Value in AED"
-                          placeholder="Enter minimum order value"
-                          type="number"
-                        />
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
                       </Grid>
 
-                      {/* Minimum Lead Time in Days */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="minimum_lead_time_days"
-                          label="Minimum Lead Time in Days"
-                          placeholder="Enter minimum lead time"
-                          type="number"
-                        />
+                      {/* Social Media Links */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                          Social Media Links
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          Add your social media profiles to help customers find and connect with
+                          you.
+                        </Typography>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Stack spacing={2}>
+                          {fields.map((field, index) => (
+                            <Card key={field.id} variant="outlined" sx={{ p: 2 }}>
+                              <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={4}>
+                                  <RHFSelect
+                                    name={`social_links.${index}.platform`}
+                                    label="Platform"
+                                    placeholder="Select platform"
+                                  >
+                                    {SOCIAL_PLATFORMS.map((platform) => (
+                                      <MenuItem key={platform.value} value={platform.value}>
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                          <Iconify icon={platform.icon} width={20} />
+                                          <Typography>{platform.label}</Typography>
+                                        </Stack>
+                                      </MenuItem>
+                                    ))}
+                                  </RHFSelect>
+                                </Grid>
+                                <Grid item xs={12} sm={7}>
+                                  <RHFTextField
+                                    name={`social_links.${index}.url`}
+                                    label="URL"
+                                    placeholder="https://..."
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={1}>
+                                  <IconButton
+                                    onClick={() => remove(index)}
+                                    color="error"
+                                    disabled={fields.length === 1}
+                                  >
+                                    <Iconify icon="mingcute:delete-2-line" />
+                                  </IconButton>
+                                </Grid>
+                              </Grid>
+                            </Card>
+                          ))}
+
+                          <Button
+                            variant="outlined"
+                            startIcon={<Iconify icon="mingcute:add-line" />}
+                            onClick={() => append({ platform: '', url: '' })}
+                            sx={{ alignSelf: 'flex-start' }}
+                          >
+                            Add Social Link
+                          </Button>
+                        </Stack>
+                      </Grid>
+
+                      {/* Business Profile Submit Button */}
+                      <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                          <LoadingButton
+                            type="submit"
+                            variant="contained"
+                            loading={isBusinessSubmitting || updateBusinessProfile.isPending}
+                            loadingPosition="start"
+                            startIcon={<Iconify icon="mingcute:save-line" />}
+                            size="large"
+                          >
+                            Save Business Profile
+                          </LoadingButton>
+                        </Box>
                       </Grid>
                     </Grid>
-                  )}
-
-                  {/* Submit Button */}
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                    <LoadingButton
-                      type="submit"
-                      variant="contained"
-                      loading={isSubmitting}
-                      loadingPosition="start"
-                      startIcon={<Iconify icon="mingcute:save-line" />}
-                      size="large"
-                    >
-                      Save Changes
-                    </LoadingButton>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                  </FormProvider>
+                )}
+              </CardContent>
+            </Card>
           </Grid>
-        </FormProvider>
+        </Grid>
       </Container>
     </>
   );
