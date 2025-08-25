@@ -46,4 +46,7 @@ export const servicesApi = {
   // Delete individual supplier service
   deleteSupplierService: async (id: string): Promise<void> =>
     api.delete(`/supplier/supplier-services/${id}`),
+
+   // Get available services types for selection
+    getServiceTypes: async (): Promise<SupplierServicesResponse> => api.get('/supplier/services'),
 };

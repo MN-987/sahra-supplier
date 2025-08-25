@@ -8,6 +8,12 @@ export const supplierServicesKeys = {
   lists: () => [...supplierServicesKeys.all, 'list'] as const,
 };
 
+// Separate key for service types to avoid cache collisions with supplier services
+export const serviceTypesKeys = {
+  all: ['serviceTypes'] as const,
+  lists: () => [...serviceTypesKeys.all, 'list'] as const,
+};
+
 // Get supplier services
 export const useSupplierServices = () =>
   useQuery({
@@ -83,3 +89,9 @@ export const useDeleteSupplierService = () => {
     },
   });
 };
+export const useServicesTypes = () =>
+  useQuery({
+    queryKey: serviceTypesKeys.lists(),
+    queryFn: () => servicesApi.getServiceTypes(),
+    staleTime: 10 * 60 * 1000,
+  });

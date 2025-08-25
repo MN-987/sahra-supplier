@@ -30,7 +30,7 @@ export const paths = {
       services: `${ROOTS.DASHBOARD}/management/services`,
       create: `${ROOTS.DASHBOARD}/management/services/create`,
       createEvent: `${ROOTS.DASHBOARD}/management/events/create`,
-
+      requests: `${ROOTS.DASHBOARD}/management/requests`,
     },
   },
 };
