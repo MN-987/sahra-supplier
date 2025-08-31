@@ -4,6 +4,7 @@ import { paths } from 'src/routes/paths';
 // components
 import Iconify from 'src/components/iconify';
 
+
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => <Iconify icon={name} />;
@@ -36,6 +37,7 @@ const ICONS = {
   vendor: icon('solar:users-group-rounded-bold'),
   event: icon('solar:calendar-mark-bold'),
   services: icon('solar:settings-bold'),
+  requests: icon('solar:inbox-bold'), 
 };
 
 // ----------------------------------------------------------------------
@@ -104,7 +106,14 @@ export function useNavData() {
             path: paths.dashboard.management.calender,
             icon: ICONS.calendar,
           },
-       
+          {
+            title: 'Requests',
+            path: paths.dashboard.management.requests,
+            icon: ICONS.requests,
+            children: [
+              { title: 'List', path: paths.dashboard.management.requests },
+            ],
+          },
         ],
       },
     ],

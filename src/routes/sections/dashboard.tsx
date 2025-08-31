@@ -8,6 +8,7 @@ import DashboardLayout from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 import Calender from 'src/pages/dashboard/Calender';
 
+
 // ----------------------------------------------------------------------
 
 const Home = lazy(() => import('src/pages/dashboard/Home'));
@@ -20,6 +21,7 @@ const CreateEvent = lazy(() => import('src/pages/dashboard/CreateEvent'));
 const Profile = lazy(() => import('src/pages/dashboard/Profile'));
 const Services = lazy(() => import('src/pages/dashboard/Services'));
 const CreateService = lazy(() => import('src/pages/dashboard/CreateService'));
+const Requests = lazy(() => import('src/pages/dashboard/Requests'));
 
 // ----------------------------------------------------------------------
 
@@ -65,6 +67,7 @@ export const dashboardRoutes = [
             ],
           },
           { path: 'calender', element: <Calender /> },
+          { path: 'requests', element: <Requests /> },
         ],
       },
     ],
