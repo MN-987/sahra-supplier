@@ -29,6 +29,16 @@ import { SupplierService, ServicePrice } from 'src/services/api/services';
 interface EditServiceFormData {
   service_id: string;
   delivery_time_slots: string;
+  // Policy Information
+  minimum_order_value: string;
+  minimum_lead_time: string;
+  setup_time: string;
+  teardown_time: string;
+  cancellation_policy: string;
+  deposit_requirement: string;
+  repeat_rate: string;
+  additional_requirements: string;
+  // Prices
   prices: ServicePrice[];
 }
 
@@ -63,6 +73,16 @@ const PRICE_TYPE_OPTIONS = [
 const EditServiceSchema = Yup.object().shape({
   service_id: Yup.string().required('Service is required'),
   delivery_time_slots: Yup.string().required('Delivery time slots is required'),
+  // Policy Information
+  minimum_order_value: Yup.string().required('Minimum order value is required'),
+  minimum_lead_time: Yup.string().required('Minimum lead time is required'),
+  setup_time: Yup.string().required('Setup time is required'),
+  teardown_time: Yup.string().required('Teardown time is required'),
+  cancellation_policy: Yup.string().required('Cancellation policy is required'),
+  deposit_requirement: Yup.string().required('Deposit requirement is required'),
+  repeat_rate: Yup.string().required('Repeat rate is required'),
+  additional_requirements: Yup.string(),
+  // Prices
   prices: Yup.array()
     .of(
       Yup.object().shape({
@@ -83,6 +103,16 @@ export default function EditServiceModal({
   const defaultValues: EditServiceFormData = {
     service_id: service?.service_id || '',
     delivery_time_slots: service?.delivery_time_slots || '',
+    // Policy Information
+    minimum_order_value: (service as any)?.minimum_order_value || '',
+    minimum_lead_time: (service as any)?.minimum_lead_time || '',
+    setup_time: (service as any)?.setup_time || '',
+    teardown_time: (service as any)?.teardown_time || '',
+    cancellation_policy: (service as any)?.cancellation_policy || '',
+    deposit_requirement: (service as any)?.deposit_requirement || '',
+    repeat_rate: (service as any)?.repeat_rate || '',
+    additional_requirements: (service as any)?.additional_requirements || '',
+    // Prices
     prices: service?.prices || [{ price: 0, type: 1 }],
   };
 
@@ -109,6 +139,16 @@ export default function EditServiceModal({
       reset({
         service_id: service.service_id,
         delivery_time_slots: service.delivery_time_slots,
+        // Policy Information
+        minimum_order_value: (service as any)?.minimum_order_value || '',
+        minimum_lead_time: (service as any)?.minimum_lead_time || '',
+        setup_time: (service as any)?.setup_time || '',
+        teardown_time: (service as any)?.teardown_time || '',
+        cancellation_policy: (service as any)?.cancellation_policy || '',
+        deposit_requirement: (service as any)?.deposit_requirement || '',
+        repeat_rate: (service as any)?.repeat_rate || '',
+        additional_requirements: (service as any)?.additional_requirements || '',
+        // Prices
         prices: service.prices.length > 0 ? service.prices : [{ price: 0, type: 1 }],
       });
     }
@@ -129,8 +169,18 @@ export default function EditServiceModal({
       await onSave(service.id, {
         service_id: data.service_id,
         delivery_time_slots: data.delivery_time_slots,
+        // Policy Information
+        minimum_order_value: data.minimum_order_value,
+        minimum_lead_time: data.minimum_lead_time,
+        setup_time: data.setup_time,
+        teardown_time: data.teardown_time,
+        cancellation_policy: data.cancellation_policy,
+        deposit_requirement: data.deposit_requirement,
+        repeat_rate: data.repeat_rate,
+        additional_requirements: data.additional_requirements,
+        // Prices
         prices: data.prices,
-      });
+      } as any);
       onClose();
     }
   });
@@ -147,8 +197,15 @@ export default function EditServiceModal({
       </DialogTitle>
 
       <FormProvider methods={methods} onSubmit={onSubmit}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <Grid container spacing={3}>
+            {/* Service Type and Delivery Time Slots */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, color: 'primary.main' }}>
+                Service Information
+              </Typography>
+            </Grid>
+
             {/* Service Dropdown */}
             <Grid item xs={12} md={6}>
               <RHFSelect name="service_id" label="Service Type" placeholder="Select a service">
@@ -168,15 +225,118 @@ export default function EditServiceModal({
               <RHFTextField
                 name="delivery_time_slots"
                 label="Delivery Time Slots"
-                placeholder="Enter delivery time slots"
+                placeholder="e.g. 2-4 Hours, Morning, Evening"
+              />
+            </Grid>
+
+            {/* Policy Information Section */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 2, color: 'primary.main' }}>
+                Policy Information
+              </Typography>
+            </Grid>
+
+            {/* Minimum Order Value */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="minimum_order_value"
+                label="Minimum Order Value (AED)"
+                placeholder="Enter minimum order value"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>AED</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Minimum Lead Time */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="minimum_lead_time"
+                label="Minimum Lead Time (Days)"
+                placeholder="Enter minimum lead time"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>days</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Setup Time */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="setup_time"
+                label="Setup Time (Hours)"
+                placeholder="Enter setup time"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>hours</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Teardown Time */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="teardown_time"
+                label="Teardown Time (Hours)"
+                placeholder="Enter teardown time"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>hours</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Cancellation Policy */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="cancellation_policy"
+                label="Cancellation Policy (Days)"
+                placeholder="Enter cancellation policy"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>days</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Deposit Requirement */}
+            <Grid item xs={12} sm={6}>
+              <RHFTextField
+                name="deposit_requirement"
+                label="Deposit Requirement (%)"
+                placeholder="Enter deposit percentage"
+                type="number"
+                InputProps={{
+                  endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>%</Box>,
+                }}
+              />
+            </Grid>
+
+            {/* Repeat Rate */}
+            <Grid item xs={12}>
+              <RHFTextField
+                name="repeat_rate"
+                label="Repeat Rate"
+                placeholder="e.g., Monthly, Weekly, One-time"
+              />
+            </Grid>
+
+            {/* Additional Requirements */}
+            <Grid item xs={12}>
+              <RHFTextField
+                name="additional_requirements"
+                label="Additional Requirements (Optional)"
+                placeholder="Enter any additional requirements or special conditions"
                 multiline
-                rows={2}
+                rows={3}
               />
             </Grid>
 
             {/* Prices Section */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 2, color: 'primary.main' }}>
                 Pricing
               </Typography>
 
@@ -220,7 +380,7 @@ export default function EditServiceModal({
                         type="number"
                         inputProps={{ min: 0, step: 0.01 }}
                         InputProps={{
-                          startAdornment: <Box sx={{ mr: 1, color: 'text.secondary' }}>$</Box>,
+                          startAdornment: <Box sx={{ mr: 1, color: 'text.secondary' }}>AED</Box>,
                         }}
                       />
                     </Grid>
