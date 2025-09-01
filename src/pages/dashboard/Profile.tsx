@@ -38,15 +38,12 @@ interface SocialLink {
 }
 
 interface PersonalProfileFormData {
-  service_areas_covered?: string[];
   company_name: string;
   description?: string;
-  location: string;
   address: string;
   registration_number: string;
   email: string;
   contact_number: string;
-  contact_name: string;
   preferred_contact_method?: string[];
 }
 
@@ -64,21 +61,14 @@ interface BusinessProfileFormData {
 }
 
 const PersonalProfileSchema = Yup.object().shape({
-  service_areas_covered: Yup.array()
-    .of(Yup.string())
-    .min(1, 'At least one service area is required'),
   company_name: Yup.string()
     .required('Company name is required')
     .min(2, 'Company name must be at least 2 characters'),
   description: Yup.string().nullable(),
-  location: Yup.string().required('Location is required'),
   address: Yup.string().required('Address is required'),
   registration_number: Yup.string().required('Registration number is required'),
   email: Yup.string().required('Email is required').email('Email must be a valid email address'),
   contact_number: Yup.string().required('Contact number is required'),
-  contact_name: Yup.string()
-    .required('Contact name is required')
-    .min(2, 'Contact name must be at least 2 characters'),
   preferred_contact_method: Yup.array()
     .of(Yup.string())
     .min(1, 'At least one contact method is required'),
@@ -120,18 +110,6 @@ const SOCIAL_PLATFORMS = [
   { value: 'other', label: 'Other', icon: 'ri:links-line' },
 ];
 
-const SERVICE_AREAS = [
-  'Dubai',
-  'Abu Dhabi',
-  'Sharjah',
-  'Ras Al Khaimah',
-  'Ajman',
-  'Umm Al Quwain',
-  'Fujeirah',
-];
-
-const CONTACT_METHODS = ['whatsapp', 'call', 'email'];
-
 export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
   const [currentTab, setCurrentTab] = useState('personal');
@@ -144,15 +122,12 @@ export default function ProfilePage() {
 
   // Personal Profile Form
   const personalDefaultValues: PersonalProfileFormData = {
-    service_areas_covered: [],
     company_name: '',
     description: '',
-    location: '',
     address: '',
     registration_number: '',
     email: '',
     contact_number: '',
-    contact_name: '',
     preferred_contact_method: [],
   };
 
@@ -181,7 +156,6 @@ export default function ProfilePage() {
   });
 
   const {
-    control: personalControl,
     handleSubmit: handlePersonalSubmit,
     reset: resetPersonal,
     formState: { isSubmitting: isPersonalSubmitting },
@@ -210,15 +184,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       resetPersonal({
-        service_areas_covered: [],
         company_name: user.name || '',
         description: user.description || '',
-        location: '',
         address: user.address || '',
         registration_number: '',
         email: user.email || '',
         contact_number: user.phone_number || '',
-        contact_name: user.name || '',
         preferred_contact_method: [],
       });
     }
@@ -375,127 +346,103 @@ export default function ProfilePage() {
                 {currentTab === 'personal' && (
                   <FormProvider methods={personalMethods} onSubmit={onPersonalSubmit}>
                     <Grid container spacing={3}>
-                      {/* Past Event References */}
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                          Past Event References
-                        </Typography>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '1px solid #ccc',
-                            borderRadius: '8px',
-                            backgroundColor: '#f9f9f9',
-                          }}
-                        />
-                      </Grid>
-
-                      {/* Service Areas Covered */}
-                      <Grid item xs={12}>
-                        <RHFMultiCheckbox
-                          name="service_areas_covered"
-                          label="Service Areas Covered"
-                          options={SERVICE_AREAS.map((area) => ({ label: area, value: area }))}
-                          row
-                          spacing={1}
-                          sx={{ mt: 1 }}
-                        />
-                      </Grid>
-
                       {/* Company Name */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
                           name="company_name"
-                          label="Company Name"
+                          label="Company Name *"
                           placeholder="Enter company name"
                         />
                       </Grid>
 
-                      {/* Location */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="location"
-                          label="Location"
-                          placeholder="Enter location"
-                        />
-                      </Grid>
-
-                      {/* Registration Number */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="registration_number"
-                          label="Registration Number"
-                          placeholder="Enter registration number"
-                          type="number"
-                        />
-                      </Grid>
-
-                      {/* Email */}
+                      {/* Company Email */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
                           name="email"
-                          label="Email"
+                          label="Company Email *"
                           type="email"
-                          placeholder="Enter email address"
+                          placeholder="Enter company email"
                         />
                       </Grid>
 
-                      {/* Contact Number */}
+                      {/* Company Phone */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
                           name="contact_number"
-                          label="Contact Number"
-                          placeholder="Enter contact number"
-                          type="number"
+                          label="Company Phone *"
+                          placeholder="Enter company phone"
                         />
                       </Grid>
 
-                      {/* Contact Name */}
+                      {/* Trade License Number */}
                       <Grid item xs={12} sm={6}>
                         <RHFTextField
-                          name="contact_name"
-                          label="Contact Name"
-                          placeholder="Enter contact name"
+                          name="registration_number"
+                          label="Trade License Number *"
+                          placeholder="Enter trade license number"
                         />
                       </Grid>
 
-                      {/* Preferred Contact Method */}
-                      <Grid item xs={12}>
-                        <RHFMultiCheckbox
-                          name="preferred_contact_method"
-                          label="Preferred Contact Method"
-                          options={CONTACT_METHODS.map((method) => ({
-                            label: method.charAt(0).toUpperCase() + method.slice(1),
-                            value: method,
-                          }))}
-                          row
-                          spacing={1}
-                          sx={{ mt: 1 }}
-                        />
-                      </Grid>
-
-                      {/* Address */}
+                      {/* Company Address */}
                       <Grid item xs={12}>
                         <RHFTextField
                           name="address"
-                          label="Address"
-                          placeholder="Enter address"
-                          multiline
-                          rows={2}
+                          label="Company Address *"
+                          placeholder="Enter company address"
                         />
                       </Grid>
 
-                      {/* Description */}
+                      {/* Company Description */}
                       <Grid item xs={12}>
                         <RHFTextField
                           name="description"
-                          label="Description"
-                          placeholder="Enter description"
+                          label="Company Description"
+                          placeholder="Enter company description"
                           multiline
                           rows={4}
+                        />
+                      </Grid>
+
+                      {/* Trade License Upload Section */}
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                          Trade License (Upload)
+                        </Typography>
+                        <Button
+                          variant="outlined"
+                          startIcon={<Iconify icon="eva:download-outline" />}
+                          sx={{ mb: 2, textTransform: 'none' }}
+                        >
+                          Download (7.19 KB)
+                        </Button>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          Current file: profile
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+                          component="label"
+                          sx={{ textTransform: 'none' }}
+                        >
+                          Upload Trade License
+                          <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden />
+                        </Button>
+                      </Grid>
+
+                      {/* Preferred Contact Methods */}
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                          Preferred Contact Methods
+                        </Typography>
+                        <RHFMultiCheckbox
+                          name="preferred_contact_method"
+                          options={[
+                            { label: 'Email', value: 'email' },
+                            { label: 'Phone', value: 'phone' },
+                            { label: 'WhatsApp', value: 'whatsapp' },
+                          ]}
+                          spacing={1}
+                          sx={{ mt: 1 }}
                         />
                       </Grid>
 
