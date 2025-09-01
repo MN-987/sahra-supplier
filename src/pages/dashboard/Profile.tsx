@@ -47,16 +47,20 @@ interface PersonalProfileFormData {
   preferred_contact_method?: string[];
 }
 
+interface PastEventReference {
+  event_name: string;
+  client_name: string;
+  event_date: string;
+  event_type: string;
+  guest_count: number;
+  location: string;
+  description: string;
+}
+
 interface BusinessProfileFormData {
-  repeat_rate: string;
-  backup_emergency_options: string;
-  cancellation_policy: string;
-  deposit_requirements: string;
   bank_details: string;
-  minimum_order_value_aed: number;
-  minimum_lead_time_days: number;
-  setup_teardown_time: string;
-  any_other_information?: string;
+  additional_information?: string;
+  past_event_references?: PastEventReference[];
   social_links?: SocialLink[];
 }
 
@@ -75,19 +79,23 @@ const PersonalProfileSchema = Yup.object().shape({
 });
 
 const BusinessProfileSchema = Yup.object().shape({
-  repeat_rate: Yup.string().required('Repeat rate is required'),
-  backup_emergency_options: Yup.string().required('Backup/emergency options are required'),
-  cancellation_policy: Yup.string().required('Cancellation policy is required'),
-  deposit_requirements: Yup.string().required('Deposit requirements are required'),
   bank_details: Yup.string().required('Bank details are required'),
-  minimum_order_value_aed: Yup.number()
-    .required('Minimum order value is required')
-    .positive('Must be a positive number'),
-  minimum_lead_time_days: Yup.number()
-    .required('Minimum lead time is required')
-    .positive('Must be a positive number'),
-  setup_teardown_time: Yup.string().required('Setup/teardown time is required'),
-  any_other_information: Yup.string().optional(),
+  additional_information: Yup.string().optional(),
+  past_event_references: Yup.array()
+    .of(
+      Yup.object().shape({
+        event_name: Yup.string().required('Event name is required'),
+        client_name: Yup.string().required('Client name is required'),
+        event_date: Yup.string().required('Event date is required'),
+        event_type: Yup.string().required('Event type is required'),
+        guest_count: Yup.number()
+          .required('Guest count is required')
+          .positive('Must be a positive number'),
+        location: Yup.string().required('Location is required'),
+        description: Yup.string().required('Description is required'),
+      })
+    )
+    .optional(),
   social_links: Yup.array()
     .of(
       Yup.object().shape({
@@ -138,15 +146,9 @@ export default function ProfilePage() {
 
   // Business Profile Form
   const businessDefaultValues: BusinessProfileFormData = {
-    repeat_rate: '',
-    backup_emergency_options: '',
-    cancellation_policy: '',
-    deposit_requirements: '',
     bank_details: '',
-    minimum_order_value_aed: 0,
-    minimum_lead_time_days: 0,
-    setup_teardown_time: '',
-    any_other_information: '',
+    additional_information: '',
+    past_event_references: [],
     social_links: [],
   };
 
@@ -165,8 +167,12 @@ export default function ProfilePage() {
     control: businessControl,
     handleSubmit: handleBusinessSubmit,
     reset: resetBusiness,
+    watch: watchBusiness,
+    setValue: setValueBusiness,
     formState: { isSubmitting: isBusinessSubmitting },
   } = businessMethods;
+
+  const watchBusinessFields = watchBusiness();
 
   const { fields, append, remove } = useFieldArray({
     control: businessControl,
@@ -211,15 +217,9 @@ export default function ProfilePage() {
       }
 
       resetBusiness({
-        repeat_rate: profile.repeat_rate || '',
-        backup_emergency_options: profile.backup_emergency_options || '',
-        cancellation_policy: profile.cancellation_policy || '',
-        deposit_requirements: profile.deposit_requirements || '',
         bank_details: profile.bank_details || '',
-        minimum_order_value_aed: profile.minimum_order_value_aed || 0,
-        minimum_lead_time_days: profile.minimum_lead_time_days || 0,
-        setup_teardown_time: profile.setup_teardown_time || '',
-        any_other_information: profile.any_other_information || '',
+        additional_information: profile.additional_information || '',
+        past_event_references: profile.past_event_references || [],
         social_links: socialLinks.length > 0 ? socialLinks : [{ platform: '', url: '' }],
       });
     }
@@ -252,15 +252,9 @@ export default function ProfilePage() {
       }
 
       const businessData = {
-        repeat_rate: data.repeat_rate,
-        backup_emergency_options: data.backup_emergency_options,
-        cancellation_policy: data.cancellation_policy,
-        deposit_requirements: data.deposit_requirements,
         bank_details: data.bank_details,
-        minimum_order_value_aed: data.minimum_order_value_aed,
-        minimum_lead_time_days: data.minimum_lead_time_days,
-        setup_teardown_time: data.setup_teardown_time,
-        any_other_information: data.any_other_information || '',
+        additional_information: data.additional_information || '',
+        past_event_references: data.past_event_references || [],
         social_media_profiles: socialMediaProfiles,
       };
 
@@ -469,129 +463,21 @@ export default function ProfilePage() {
                 {currentTab === 'business' && (
                   <FormProvider methods={businessMethods} onSubmit={onBusinessSubmit}>
                     <Grid container spacing={3}>
-                      {/* Financial Information - Priority Questions */}
-                      <Grid item xs={12}>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-                          Financial Information
-                        </Typography>
-                      </Grid>
-
-                      {/* Minimum Order Value in AED */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="minimum_order_value_aed"
-                          label="Minimum Order Value (AED)"
-                          placeholder="Enter minimum order value"
-                          type="number"
-                          InputProps={{
-                            startAdornment: <Box sx={{ mr: 1, color: 'text.secondary' }}>AED</Box>,
-                          }}
-                        />
-                      </Grid>
-
-                      {/* Deposit Requirements */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="deposit_requirements"
-                          label="Deposit Requirements (%)"
-                          placeholder="Enter deposit percentage"
-                          type="number"
-                          InputProps={{
-                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>%</Box>,
-                          }}
-                        />
-                      </Grid>
-
-                      {/* Bank Details */}
+                      {/* IBAN / Bank Details */}
                       <Grid item xs={12}>
                         <RHFTextField
                           name="bank_details"
-                          label="Bank Details"
-                          placeholder="Enter bank account details (IBAN, Account Number, etc.)"
-                          multiline
-                          rows={2}
-                        />
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <Divider sx={{ my: 2 }} />
-                      </Grid>
-
-                      {/* Operational Information */}
-                      <Grid item xs={12}>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-                          Operational Information
-                        </Typography>
-                      </Grid>
-
-                      {/* Minimum Lead Time in Days */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="minimum_lead_time_days"
-                          label="Minimum Lead Time (Days)"
-                          placeholder="Enter minimum lead time"
-                          type="number"
-                          InputProps={{
-                            endAdornment: <Box sx={{ ml: 1, color: 'text.secondary' }}>days</Box>,
-                          }}
-                        />
-                      </Grid>
-
-                      {/* Cancellation Policy */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="cancellation_policy"
-                          label="Cancellation Policy"
-                          placeholder="Describe your cancellation policy"
-                          multiline
-                          rows={2}
-                        />
-                      </Grid>
-
-                      {/* Setup and Teardown Time */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="setup_teardown_time"
-                          label="Setup and Teardown Time"
-                          placeholder="e.g. 2 hours, 30 minutes"
-                        />
-                      </Grid>
-
-                      {/* Repeat Rate */}
-                      <Grid item xs={12} sm={6}>
-                        <RHFTextField
-                          name="repeat_rate"
-                          label="Repeat Rate"
-                          placeholder="e.g. Monthly, Weekly, etc."
-                        />
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <Divider sx={{ my: 2 }} />
-                      </Grid>
-
-                      {/* Additional Information */}
-                      <Grid item xs={12}>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-                          Additional Information
-                        </Typography>
-                      </Grid>
-
-                      {/* Backup Emergency Options */}
-                      <Grid item xs={12}>
-                        <RHFTextField
-                          name="backup_emergency_options"
-                          label="Backup/Emergency Options"
-                          placeholder="Describe your backup plans and emergency options"
+                          label="IBAN / Bank Details"
+                          placeholder="Enter your IBAN or bank account details"
                           multiline
                           rows={3}
                         />
                       </Grid>
 
-                      {/* Licenses and Certifications */}
+                      {/* Upload Certifications File */}
                       <Grid item xs={12}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                          Licenses and Certifications
+                          Upload Certifications File
                         </Typography>
                         <input
                           type="file"
@@ -606,15 +492,129 @@ export default function ProfilePage() {
                         />
                       </Grid>
 
-                      {/* Any Other Information */}
+                      {/* Additional Information */}
                       <Grid item xs={12}>
                         <RHFTextField
-                          name="any_other_information"
-                          label="Any Other Information"
-                          placeholder="Additional details about your services, special offerings, etc."
+                          name="additional_information"
+                          label="Additional Information"
+                          placeholder="Add any additional information about your services"
                           multiline
-                          rows={3}
+                          rows={4}
                         />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
+                      </Grid>
+
+                      {/* Past Event References */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                          Past Event References
+                        </Typography>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        {watchBusinessFields.past_event_references?.map((reference, index) => (
+                          <Card key={index} sx={{ mb: 2, p: 2 }}>
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.event_name`}
+                                  label="Event Name"
+                                  placeholder="Enter event name"
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.client_name`}
+                                  label="Client Name"
+                                  placeholder="Enter client name"
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.event_date`}
+                                  label="Event Date"
+                                  type="date"
+                                  InputLabelProps={{ shrink: true }}
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.event_type`}
+                                  label="Event Type"
+                                  placeholder="e.g., Wedding, Corporate, Birthday"
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.guest_count`}
+                                  label="Guest Count"
+                                  type="number"
+                                  placeholder="Number of guests"
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.location`}
+                                  label="Location"
+                                  placeholder="Event location"
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <RHFTextField
+                                  name={`past_event_references.${index}.description`}
+                                  label="Description"
+                                  placeholder="Brief description of the event and your services"
+                                  multiline
+                                  rows={3}
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <Button
+                                  color="error"
+                                  onClick={() => {
+                                    const currentReferences =
+                                      watchBusinessFields.past_event_references || [];
+                                    const updatedReferences = currentReferences.filter(
+                                      (_, i) => i !== index
+                                    );
+                                    setValueBusiness('past_event_references', updatedReferences);
+                                  }}
+                                  startIcon={<Iconify icon="mingcute:delete-2-line" />}
+                                >
+                                  Remove Reference
+                                </Button>
+                              </Grid>
+                            </Grid>
+                          </Card>
+                        ))}
+
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            const currentReferences =
+                              watchBusinessFields.past_event_references || [];
+                            const newReference = {
+                              event_name: '',
+                              client_name: '',
+                              event_date: '',
+                              event_type: '',
+                              guest_count: 0,
+                              location: '',
+                              description: '',
+                            };
+                            setValueBusiness('past_event_references', [
+                              ...currentReferences,
+                              newReference,
+                            ]);
+                          }}
+                          startIcon={<Iconify icon="mingcute:add-line" />}
+                          sx={{ mb: 2 }}
+                        >
+                          Add Event Reference
+                        </Button>
                       </Grid>
 
                       <Grid item xs={12}>
