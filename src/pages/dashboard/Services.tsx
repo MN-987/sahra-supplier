@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Box,
 } from '@mui/material';
 import { useRouter } from 'src/routes/hooks';
@@ -24,6 +23,7 @@ import {
   useUpdateSupplierServices,
   supplierServicesKeys,
 } from 'src/sections/services/hooks';
+import { EditServiceModal } from 'src/sections/services/components';
 import { useQueryClient } from '@tanstack/react-query';
 
 // ----------------------------------------------------------------------
@@ -72,32 +72,62 @@ export default function Services() {
   const deleteMutation = useDeleteSupplierService();
   const [isDeleting, setIsDeleting] = useState(false);
   const updateMutation = useUpdateSupplierServices();
-  const [isUpdating, setIsUpdating] = useState(false);
   const queryClient = useQueryClient();
 
-
-  const [editDialog, setEditDialog] = useState<{ open: boolean; row: any }>({
-    open: false,
-    row: null,
-  });
-  const [editDelivery, setEditDelivery] = useState('');
-  const [editPrices, setEditPrices] = useState<Array<{ id?: string; price: string; type: any }>>(
-    []
-  );
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [serviceToEdit, setServiceToEdit] = useState<any>(null);
 
   const handleDelete = (row: any) => {
     setDeleteDialog({ open: true, row });
   };
 
   const handleEdit = (row: any) => {
-    
-    setEditDialog({ open: true, row });
-    setEditDelivery(row.delivery_time_slots || '');
-    setEditPrices(
-      Array.isArray(row.prices)
-        ? row.prices.map((p: any) => ({ id: p.id, price: String(p.price), type: p.type }))
-        : []
-    );
+    setServiceToEdit(row);
+    setEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setServiceToEdit(null);
+  };
+
+  const handleSaveService = async (id: string, data: any) => {
+    try {
+      const payload = {
+        services: [
+          {
+            id,
+            service_id: data.service_id,
+            delivery_time_slots: data.delivery_time_slots,
+            // Policy Information
+            minimum_order_value: data.minimum_order_value,
+            minimum_lead_time: data.minimum_lead_time,
+            setup_time: data.setup_time,
+            teardown_time: data.teardown_time,
+            cancellation_policy: data.cancellation_policy,
+            deposit_requirement: data.deposit_requirement,
+            repeat_rate: data.repeat_rate,
+            additional_requirements: data.additional_requirements,
+            // Prices
+            prices: data.prices,
+          },
+        ],
+      };
+
+      await updateMutation.mutateAsync(payload as any);
+      
+      try {
+        await queryClient.invalidateQueries({ queryKey: supplierServicesKeys.all });
+      } catch (e) {
+        // ignore invalidate errors
+      }
+      
+      setEditModalOpen(false);
+      setServiceToEdit(null);
+    } catch (error) {
+      console.error('Update failed', error);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -121,52 +151,6 @@ export default function Services() {
   };
 
   const handleCloseDelete = () => setDeleteDialog({ open: false, row: null });
-
-  const handlePriceChange = (index: number, value: string) => {
-    setEditPrices((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], price: value };
-      return next;
-    });
-  };
-
-  const handleCloseEdit = () => setEditDialog({ open: false, row: null });
-
-  const handleConfirmEdit = async () => {
-    if (!editDialog.row) return;
-    setIsUpdating(true);
-    try {
-      const pricesPayload = editPrices.map((p) => ({
-        id: p.id,
-        price: p.price,
-        type: typeof p.type === 'object' ? (p.type.value ?? p.type) : p.type,
-      }));
-
-      const payload = {
-        services: [
-          {
-            id: editDialog.row.id,
-            service_id: editDialog.row.service_id,
-            delivery_time_slots: editDelivery || '',
-            prices: pricesPayload,
-          },
-        ],
-      };
-
-      await updateMutation.mutateAsync(payload as any);
- 
-      try {
-        await queryClient.invalidateQueries({ queryKey: supplierServicesKeys.all });
-      } catch (e) {
-        // noop
-      }
-    } catch (error) {
-      console.error('Update failed', error);
-    } finally {
-      setIsUpdating(false);
-      handleCloseEdit();
-    }
-  };
 
   const handleCreateService = () => {
     router.push('/dashboard/management/services/create');
@@ -293,38 +277,13 @@ export default function Services() {
               </DialogActions>
             </Dialog>
 
-            <Dialog open={editDialog.open} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
-              <DialogTitle>Edit Service</DialogTitle>
-              <DialogContent>
-                <TextField
-                  margin="dense"
-                  label="Delivery Time Slots"
-                  fullWidth
-                  value={editDelivery}
-                  onChange={(e) => setEditDelivery(e.target.value)}
-                />
-
-                {editPrices.map((p, idx) => (
-                  <TextField
-                    key={p.id ?? idx}
-                    margin="dense"
-                    label={`Price (${p.type?.label ?? p.type})`}
-                    fullWidth
-                    value={p.price}
-                    onChange={(e) => handlePriceChange(idx, e.target.value)}
-                    sx={{ mt: 1 }}
-                  />
-                ))}
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseEdit} disabled={isUpdating}>
-                  Cancel
-                </Button>
-                <Button onClick={handleConfirmEdit} variant="contained" disabled={isUpdating}>
-                  {isUpdating ? 'Saving...' : 'Save'}
-                </Button>
-              </DialogActions>
-            </Dialog>
+            {/* Edit Service Modal */}
+            <EditServiceModal
+              open={editModalOpen}
+              onClose={handleCloseEditModal}
+              service={serviceToEdit}
+              onSave={handleSaveService}
+            />
           </CardContent>
         </Card>
       </Container>
