@@ -19,31 +19,34 @@ export interface BusinessProfileItem {
 }
 
 export interface BusinessProfile {
-  backup_emergency_options?: string;
-  cancellation_policy?: string;
-  deposit_requirements?: string;
   bank_details?: string;
-  minimum_order_value_aed?: number;
-  minimum_lead_time_days?: number;
-  repeat_rate?: string;
+  additional_information?: string;
+  past_event_references?: {
+    event_name: string;
+    client_name: string;
+    event_date: string;
+    event_type: string;
+    guest_count: number;
+    location: string;
+    description: string;
+  }[];
   social_media_profiles?: SocialMediaProfiles;
-  setup_teardown_time?: string;
-  any_other_information?: string;
-  licenses_and_certifications?: string;
 }
 
 // Types for API requests/responses
 export interface BusinessProfileRequest {
-  repeat_rate: string;
-  backup_emergency_options: string;
-  cancellation_policy: string;
-  deposit_requirements: string;
   bank_details: string;
-  minimum_order_value_aed: number;
-  minimum_lead_time_days: number;
+  additional_information: string;
+  past_event_references: {
+    event_name: string;
+    client_name: string;
+    event_date: string;
+    event_type: string;
+    guest_count: number;
+    location: string;
+    description: string;
+  }[];
   social_media_profiles: SocialMediaProfiles;
-  setup_teardown_time: string;
-  any_other_information: string;
 }
 
 export interface BusinessProfileResponse {

@@ -20,26 +20,18 @@ const transformBusinessProfileData = (apiData: any): BusinessProfile => {
   if (apiData?.business_info) {
     apiData.business_info.forEach((item: any) => {
       switch (item.key) {
-        case 'backup_emergency_options':
-          profile.backup_emergency_options = item.value;
-          break;
-        case 'cancellation_policy':
-          profile.cancellation_policy = item.value;
-          break;
-        case 'deposit_requirements':
-          profile.deposit_requirements = item.value;
-          break;
         case 'bank_details':
           profile.bank_details = item.value;
           break;
-        case 'minimum_order_value_aed':
-          profile.minimum_order_value_aed = item.value ? parseInt(item.value, 10) : 0;
+        case 'additional_information':
+          profile.additional_information = item.value;
           break;
-        case 'minimum_lead_time_days':
-          profile.minimum_lead_time_days = item.value ? parseInt(item.value, 10) : 0;
-          break;
-        case 'repeat_rate':
-          profile.repeat_rate = item.value;
+        case 'past_event_references':
+          try {
+            profile.past_event_references = item.value ? JSON.parse(item.value) : [];
+          } catch {
+            profile.past_event_references = [];
+          }
           break;
         case 'social_media_profiles':
           try {
@@ -47,15 +39,6 @@ const transformBusinessProfileData = (apiData: any): BusinessProfile => {
           } catch {
             profile.social_media_profiles = {};
           }
-          break;
-        case 'setup_teardown_time':
-          profile.setup_teardown_time = item.value;
-          break;
-        case 'any_other_information':
-          profile.any_other_information = item.value;
-          break;
-        case 'licenses_and_certifications':
-          profile.licenses_and_certifications = item.value;
           break;
         default:
           // Handle unknown keys
